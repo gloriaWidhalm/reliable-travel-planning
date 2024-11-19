@@ -6,6 +6,7 @@ This is a brief descriptions of the folder structure and what to expect at each 
 
 ### Note
 There is a reference to a data folder with the GTFS and delay data - because of the size of these files, they are not included in git. They need to be downloaded individually.
+Also, the databases creating for querying live in the data folder.
 ### Packages
 We currently use duck db as database for querying the data (GTFS and actual data). We currently use networkx in one implementation (simple prototype) but it might be part of the final solution. For some data manipulations we use pandas.
 
