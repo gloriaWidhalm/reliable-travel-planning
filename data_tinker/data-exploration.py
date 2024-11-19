@@ -5,10 +5,10 @@ import duckdb
 import pandas as pd
 
 # Connect to the database
-connection = duckdb.connect("transport_data.db", read_only=False)
+connection = duckdb.connect("../transport_data.db", read_only=False)
 
 
-query = f""" CREATE TABLE IF NOT EXISTS services AS SELECT * FROM './data/*.csv'"""
+query = f""" CREATE TABLE IF NOT EXISTS services AS SELECT * FROM '../data/delay_data/*.csv'"""
 connection.execute(query)
 
 r = connection.sql("DESCRIBE services")
