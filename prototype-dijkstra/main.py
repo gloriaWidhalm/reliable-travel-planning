@@ -4,35 +4,42 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import itertools as it
 
-# graph data - nodes and edges
-# this structure is an adjacency list (each node has its neighbors and the corresponding departure and arrival times)
-# times in minutes
+def print_path(path):
+    """
+    Print the path in a human-readable way
+    :param path: tuple with the path (departure_time, node, arrival_time, identifier)
+    """
+    for (departure_time, node, arrival_time, identifier) in path:
+        if identifier is None:
+            # The first edge is the source node
+            print(f"Start at {path[0][1]} at {path[0][0]}")
+        else:
+            print(f"Take {identifier} to {node} at {departure_time} and arrive at {arrival_time}")
 
-# @TODO: important aspect -> does this structure make sense for the problem? with the neighbors in a dictionary and the departure and arrival times in a list?
+
+# Data structure (tuples sorted by departure time for faster access)
+# We have a dictionary with the nodes as keys and the values are an array with tuples (departure_time, neighbor, arrival_time, identifier)
+# times in minutes
 graph = {
-    "A": {"B": [{"identifier": "B1", "departure_time": 200, "arrival_time": 300}, {"identifier": "B2", "departure_time": 100, "arrival_time": 200}],
-          "C": [{"identifier": "C1", "departure_time": 150, "arrival_time": 250}, {"identifier": "C2", "departure_time": 250, "arrival_time": 350}]},
-    "B": {"A": [{"identifier": "A1","departure_time": 200, "arrival_time": 300}, {"identifier": "A2","departure_time": 100, "arrival_time": 200}],
-          "D": [{"identifier": "D1","departure_time": 300, "arrival_time": 400}, {"identifier": "D2","departure_time": 400, "arrival_time": 500}]},
-    "C": {"A": [{"identifier": "A3","departure_time": 150, "arrival_time": 250}, {"identifier": "A4","departure_time": 250, "arrival_time": 350}]},
-    "D": {"A": [{"identifier": "A5","departure_time": 350, "arrival_time": 475}, {"identifier": "A6","departure_time": 450, "arrival_time": 575}],
-          "B": [{"identifier": "B3","departure_time": 300, "arrival_time": 400}, {"identifier": "B4","departure_time": 400, "arrival_time": 500}]},
+    "A": [(200, "B", 300, "B1"), (100, "B", 200, "B2"), (150, "C", 250, "C1"), (250, "C", 350, "C2")],
+    "B": [(200, "A", 300, "A1"), (100, "A", 200, "A2"), (300, "D", 400, "D1"), (400, "D", 500, "D2")],
+    "C": [(150, "A", 250, "A3"), (250, "A", 350, "A4")],
+    "D": [(350, "A", 475, "A5"), (450, "A", 575, "A6"), (300, "B", 400, "B3"), (400, "B", 500, "B4")],
 }
 
 # initialize graph G (with graph class)
 G = Graph(graph=graph)
 
 # Example: shortest path from B to D
-shortest_time, shortest_path, edges_taken = G.dijkstra("B", "D", 100)
-print(f"Shortest time from B to D is {shortest_time}")
+shortest_time, shortest_path = G.dijkstra("B", "D", 100)
+print(f"Earliest arrival time from B to D is {shortest_time}")
 print("Shortest path", shortest_path)
-print("Edges taken", edges_taken)
 
 # Example: shortest path from B to C
-shortest_time, shortest_path, edges_taken = G.dijkstra("B", "C", 100)
-print(f"Shortest time from B to C is {shortest_time}")
+shortest_time, shortest_path = G.dijkstra("B", "C", 100)
+print(f"Earliest arrival time from B to C is {shortest_time}")
 print("Shortest path", shortest_path)
-print("Edges taken", edges_taken)
+print_path(shortest_path)
 
 
 def plot_graph(graph):
@@ -47,14 +54,14 @@ def plot_graph(graph):
         for directed graph and maximum total connections for undirected graph.
         """
         # Works with arc3 and angle3 connectionstyles
-        connectionstyle = [f"arc3,rad={r}" for r in it.accumulate([0.15] * 4)]
+        connectionstyle = [f"arc3,rad={r}" for r in it.accumulate([0.16] * 4)]
         # connectionstyle = [f"angle3,angleA={r}" for r in it.accumulate([30] * 4)]
 
         pos = nx.spring_layout(G)
-        nx.draw_networkx_nodes(G, pos, ax=ax, node_size=700, node_color="skyblue")
-        nx.draw_networkx_labels(G, pos, font_size=20, ax=ax)
+        nx.draw_networkx_nodes(G, pos, ax=ax, node_size=400, node_color="skyblue")
+        nx.draw_networkx_labels(G, pos, font_size=16, ax=ax)
         nx.draw_networkx_edges(
-            G, pos, edge_color="grey", connectionstyle=connectionstyle, ax=ax, arrows=True
+            G, pos, edge_color="grey", connectionstyle=connectionstyle, ax=ax, arrows=True, arrowsize=14
         )
 
         labels = {
@@ -82,4 +89,4 @@ def plot_graph(graph):
     _draw_labeled_multigraph(G, "identifier")
     plt.show()
 
-plot_graph(graph)
+#plot_graph(graph)
