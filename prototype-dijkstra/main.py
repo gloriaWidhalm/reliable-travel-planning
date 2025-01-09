@@ -4,6 +4,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import itertools as it
 
+
 def print_path(path):
     """
     Print the path in a human-readable way
@@ -20,49 +21,80 @@ def print_path(path):
 # Data structure (tuples sorted by departure time for faster access)
 # We have a dictionary with the nodes as keys and the values are an array with tuples (departure_time, neighbor, arrival_time, identifier)
 # times in minutes
-graph = {
-    "A": [(200, "B", 300, "B1"), (100, "B", 200, "B2"), (150, "C", 250, "C1"), (250, "C", 350, "C2")],
-    "B": [(200, "A", 300, "A1"), (100, "A", 200, "A2"), (300, "D", 400, "D1"), (400, "D", 500, "D2")],
-    "C": [(150, "A", 250, "A3"), (250, "A", 350, "A4")],
-    "D": [(350, "A", 475, "A5"), (450, "A", 575, "A6"), (300, "B", 400, "B3"), (400, "B", 500, "B4")],
-}
+graph = \
+    {'Liestal': [(487, 'Olten', 505, 'IC6')],
+     'Basel SBB': [(475, 'Liestal', 486, 'IC6')],
+     'Olten': [(509, 'Bern', 536, 'IC6'), (451, 'Bern', 478, 'IC8')],
+     'Bern': [(547, 'Thun', 565, 'IC6'), (487, 'Thun', 505, 'IC8')],
+     'Thun': [(566, 'Spiez', 576, 'IC6'), (506, 'Spiez', 516, 'IC8')],
+     'Spiez': [(576, 'Visp', 602, 'IC6'), (516, 'Visp', 542, 'IC8')],
+     'Visp': [(603, 'Brig', 611, 'IC6'), (543, 'Brig', 551, 'IC8')],
+     'Brig': [],
+     'Aarau': [(438, 'Olten', 447, 'IC8')],
+     'Zürich HB': [(404, 'Aarau', 436, 'IC8')]}
+stops = [{'stop_name': 'Zürich HB', 'stop_lat': 47.378177, 'stop_lon': 8.540212},
+         {'stop_name': 'Aarau', 'stop_lat': 47.39136, 'stop_lon': 8.051274},
+         {'stop_name': 'Olten', 'stop_lat': 47.351935, 'stop_lon': 7.9077},
+         {'stop_name': 'Bern', 'stop_lat': 46.948832, 'stop_lon': 7.439131},
+         {'stop_name': 'Thun', 'stop_lat': 46.754853, 'stop_lon': 7.629606},
+         {'stop_name': 'Spiez', 'stop_lat': 46.686396, 'stop_lon': 7.680103},
+         {'stop_name': 'Visp', 'stop_lat': 46.294029, 'stop_lon': 7.881465},
+         {'stop_name': 'Brig', 'stop_lat': 46.319423, 'stop_lon': 7.988095},
+         {'stop_name': 'Basel SBB', 'stop_lat': 47.547412, 'stop_lon': 7.589563},
+         {'stop_name': 'Liestal', 'stop_lat': 47.484461, 'stop_lon': 7.731367}]
+# map stops for graph visualization: {"stop_name": [stop_lat, stop_lon]}
+stops_map = {stop['stop_name']: [stop['stop_lon'], stop['stop_lat']] for stop in stops}
 
 # initialize graph G (with graph class)
 G = Graph(graph=graph)
 
 # Example: shortest path from B to D
-shortest_time, shortest_path = G.dijkstra("B", "D", 100)
+shortest_time, shortest_path = G.dijkstra("Bern", "Brig", 400)
 print(f"Earliest arrival time from B to D is {shortest_time}")
-print("Shortest path", shortest_path)
-
-# Example: shortest path from B to C
-shortest_time, shortest_path = G.dijkstra("B", "C", 100)
-print(f"Earliest arrival time from B to C is {shortest_time}")
-print("Shortest path", shortest_path)
 print_path(shortest_path)
 
+# get edges that are part of the shortest path
+# @TODO fix that -> get the train identifier for the first edge
+shortest_path[0] = (shortest_path[0][0], shortest_path[0][1], shortest_path[0][2], shortest_path[1][3])  #
+edges_shortest_path = [(shortest_path[i][1], shortest_path[i + 1][1], shortest_path[i][3]) for i in range(len(shortest_path) - 1)]
+# get edges that are not part of the shortest path
+edges_not_shortest_path = [(node, edge[1], edge[3]) for node in graph for edge in graph[node] if (node, edge[1], edge[3]) not in edges_shortest_path]
 
-def plot_graph(graph):
+
+def plot_graph(graph, pos=stops_map):
     """
     Plot the graph using networkx and matplotlib
     Based on: https://networkx.org/documentation/stable/auto_examples/drawing/plot_multigraphs.html
     """
-    def _draw_labeled_multigraph(G, attr_name, ax=None):
+
+    def _draw_labeled_multigraph(G, attr_name, pos, ax=None):
         """
         Length of connectionstyle must be at least that of a maximum number of edges
         between a pair of nodes. This number is maximum one-sided connections
         for directed graph and maximum total connections for undirected graph.
         """
-        # Works with arc3 and angle3 connectionstyles
-        connectionstyle = [f"arc3,rad={r}" for r in it.accumulate([0.16] * 4)]
-        # connectionstyle = [f"angle3,angleA={r}" for r in it.accumulate([30] * 4)]
+        # Adjust the connectionstyle curvature
+        max_edges = max(len(G[u][v]) for u, v in G.edges())
+        connectionstyle = [f"arc3,rad={r}" for r in it.accumulate([0.15] * max_edges)]
 
-        pos = nx.spring_layout(G)
-        nx.draw_networkx_nodes(G, pos, ax=ax, node_size=400, node_color="skyblue")
-        nx.draw_networkx_labels(G, pos, font_size=16, ax=ax)
+        # pos = nx.spring_layout(G)
+        nx.draw_networkx_nodes(G, pos, ax=ax, node_size=450, node_color="skyblue")
+        # draw labels of nodes outside the nodes
+        # Draw node labels outside the nodes
+        offset = 0.035  # Adjust this value to control the distance of the labels from the nodes
+        label_pos = {node: (x, y + offset) for node, (x, y) in pos.items()}
+        nx.draw_networkx_labels(
+            G,
+            label_pos,
+            font_size=10,
+            font_color="black",
+            ax=ax,
+            bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="black", lw=0.5, alpha=0.9),
+        )
         nx.draw_networkx_edges(
             G, pos, edge_color="grey", connectionstyle=connectionstyle, ax=ax, arrows=True, arrowsize=14
         )
+        # nx.draw_networkx(G, pos)
 
         labels = {
             tuple(edge): f"{attrs[attr_name]}"
@@ -75,6 +107,7 @@ def plot_graph(graph):
             connectionstyle=connectionstyle,
             label_pos=0.5,
             font_color="black",
+            font_size=10,
             bbox=dict(boxstyle="round,pad=0.1", fc="white", ec=None, lw=0.5, alpha=1),
             ax=ax,
         )
@@ -82,11 +115,64 @@ def plot_graph(graph):
     G = nx.MultiDiGraph()
     for node in graph:
         G.add_node(node)
-        for neighbor in graph[node]:
-            for edge in graph[node][neighbor]:
-                G.add_edge(node, neighbor, identifier=edge["identifier"], departure_time=edge["departure_time"], arrival_time=edge["arrival_time"])
-
-    _draw_labeled_multigraph(G, "identifier")
+        for (departure_time, neighbor, arrival_time, identifier) in graph[node]:
+            G.add_edge(node, neighbor, identifier=identifier, departure_time=departure_time, arrival_time=arrival_time)
+    _draw_labeled_multigraph(G, "identifier", pos)
     plt.show()
 
-#plot_graph(graph)
+    def _draw_labeled_multigraph_v2(G, attr_name, pos, ax=None):
+        """
+        Draws a labeled multigraph with better visual adjustments.
+        """
+        # Adjust the connectionstyle curvature
+        max_edges = max(len(G[u][v]) for u, v in G.edges())
+        connectionstyle = [f"arc3,rad={r}" for r in it.accumulate([0.15] * max_edges)]
+
+        # Draw nodes and labels
+        nx.draw_networkx_nodes(G, pos, ax=ax, node_size=500, node_color="skyblue", edgecolors="black")
+        nx.draw_networkx_labels(G, pos, font_size=10, font_color="black", ax=ax)
+
+        # Draw edges with adjusted connection styles
+        for i, (u, v, k) in enumerate(G.edges(keys=True)):
+            nx.draw_networkx_edges(
+                G,
+                pos,
+                edgelist=[(u, v)],
+                edge_color="grey",
+                connectionstyle=connectionstyle[i % len(connectionstyle)],
+                ax=ax,
+                arrows=True,
+                arrowsize=14,
+            )
+
+        # Draw edge labels
+        labels = {
+            (u, v, k): f"{attrs[attr_name]}"
+            for u, v, k, attrs in G.edges(keys=True, data=True)
+        }
+        for (u, v, k), label in labels.items():
+            print((u, v, k), label)
+        nx.draw_networkx_edge_labels(
+            G,
+            pos,
+            edge_labels=labels,
+            font_size=8,
+            bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="black", lw=0.5, alpha=0.9),
+            ax=ax,
+        )
+
+    # Example graph creation
+    G = nx.MultiDiGraph()
+    for node in graph:
+        G.add_node(node)
+        for departure_time, neighbor, arrival_time, identifier in graph[node]:
+            G.add_edge(node, neighbor, identifier=identifier, departure_time=departure_time, arrival_time=arrival_time)
+
+    # Adjust layout for better visualization
+    pos = stops_map
+    fig, ax = plt.subplots(figsize=(10, 8))  # Adjust figure size
+    # _draw_labeled_multigraph_v2(G, "identifier", pos, ax=ax)
+    # plt.show()
+
+
+plot_graph(graph)

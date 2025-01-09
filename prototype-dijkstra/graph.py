@@ -95,7 +95,7 @@ class Graph:
 
                     # check if the new arrival time is smaller than the existing arrival time to the neighbor
                     # only update if the new arrival time is smaller
-                    if arrival_time < earliest_arrival_times[neighbor]:
+                    if neighbor in earliest_arrival_times and arrival_time < earliest_arrival_times[neighbor]:
                         # update the arrival time to the neighbor
                         earliest_arrival_times[neighbor] = arrival_time
                         # add the neighbor to the priority queue

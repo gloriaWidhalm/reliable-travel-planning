@@ -41,17 +41,17 @@ def load_data(connection):
 # main
 if __name__ == "__main__":
     # File path:
-    gtfs_path = './data/gtfs/gtfs_fp2024_2023-09-27_04-15.zip'
+    gtfs_path = './data/gtfs/gtfs_train.zip'
 
     file_name_suffix = gtfs_path.split('/')[-1].split('.')[0]
     # Connect to the database
-    connection = duckdb.connect(f"{file_name_suffix}.db", read_only=False)
+    connection = duckdb.connect(f"./data/{file_name_suffix}.db", read_only=False)
 
     # Unzip the GTFS file
-    #unzip_gtfs(gtfs_path)
+    unzip_gtfs(gtfs_path)
 
     # Create the schema
-    #create_schema(connection)
+    create_schema(connection)
 
     # Load the data into the database
-    #load_data(connection)
+    load_data(connection)

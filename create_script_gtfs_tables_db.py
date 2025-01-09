@@ -68,13 +68,13 @@ create_trip = f""" CREATE TABLE IF NOT EXISTS trips (
 
 create_stop = f""" CREATE TABLE IF NOT EXISTS stops (
     stop_id VARCHAR NOT NULL,-- PRIMARY KEY,
-    -- stop_code VARCHAR,
+    stop_code VARCHAR,
     stop_name VARCHAR NOT NULL,
-    -- stop_desc VARCHAR,
+    stop_desc VARCHAR,
     stop_lat DECIMAL(9,6) NOT NULL,
     stop_lon DECIMAL(9,6) NOT NULL,
-    -- zone_id VARCHAR,
-    -- stop_url VARCHAR,
+    zone_id VARCHAR,
+    stop_url VARCHAR,
     location_type INTEGER,
     parent_station VARCHAR,
     --FOREIGN KEY (parent_station) REFERENCES stops(stop_id)
@@ -82,8 +82,8 @@ create_stop = f""" CREATE TABLE IF NOT EXISTS stops (
 
 create_stop_time = f""" CREATE TABLE IF NOT EXISTS stop_times (
     trip_id VARCHAR NOT NULL,
-    arrival_time VARCHAR NOT NULL,
-    departure_time VARCHAR NOT NULL,
+    arrival_time VARCHAR,
+    departure_time VARCHAR,
     stop_id VARCHAR NOT NULL,
     stop_sequence INTEGER NOT NULL,
     -- stop_headsign VARCHAR,
