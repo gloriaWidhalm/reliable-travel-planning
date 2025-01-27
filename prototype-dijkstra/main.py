@@ -19,10 +19,30 @@ def print_path(path):
 
 
 # Data structure (tuples sorted by departure time for faster access)
-# We have a dictionary with the nodes as keys and the values are an array with tuples (departure_time, neighbor, arrival_time, identifier)
+# We have a dictionary with the nodes as keys and the values are an array with tuples (departure_time, neighbor, arrival_time, trip identifier)
 # times in minutes
+# @todo: define time period -> probably one day makes sense, adjust train identifier
+
+# graph = \
+# This is based on the discussion about how the data structure should/could look like with the actual departure and arrival times
+#     {
+#         # departure node (=Liestal) -> [(scheduled departure_time, neighbor station, scheduled arrival_time, trip identifier, actual departure times, actual arrival times)]
+#         # @todo -> add reliability of the connection
+#     'Liestal': [
+#         # we need all possible trips for each station within the 24 hours time period that we chose (on our reference day)
+#         # [487, 489] -> actual departure times, [505, 506] -> actual arrival times
+#         (487, 'Olten', 505, 'IC6_1', [487, 489], [505, 506]),
+#         (502, 'Olten', 512, 'IC6_2', [502, 504], [512, 513])
+#         # idea -> how to structure the actual departure and arrival times
+#         # (departure time, arrival time)
+#         # [(487, 505), (489, 506)] -> for each actual departure time, we have the actual arrival time as a tuple
+#     ],
+
 graph = \
-    {'Liestal': [(487, 'Olten', 505, 'IC6')],
+    {
+        # departure node (=Liestal) -> [(scheduled departure_time, neighbor station, scheduled arrival_time, trip identifier)]
+        # @todo -> add reliability of the connection
+    'Liestal': [(487, 'Olten', 505, 'IC6')],
      'Basel SBB': [(475, 'Liestal', 486, 'IC6')],
      'Olten': [(509, 'Bern', 536, 'IC6'), (451, 'Bern', 478, 'IC8')],
      'Bern': [(547, 'Thun', 565, 'IC6'), (487, 'Thun', 505, 'IC8')],
@@ -31,7 +51,8 @@ graph = \
      'Visp': [(603, 'Brig', 611, 'IC6'), (543, 'Brig', 551, 'IC8')],
      'Brig': [],
      'Aarau': [(438, 'Olten', 447, 'IC8')],
-     'Zürich HB': [(404, 'Aarau', 436, 'IC8')]}
+     'Zürich HB': [(404, 'Aarau', 436, 'IC8')]
+    }
 stops = [{'stop_name': 'Zürich HB', 'stop_lat': 47.378177, 'stop_lon': 8.540212},
          {'stop_name': 'Aarau', 'stop_lat': 47.39136, 'stop_lon': 8.051274},
          {'stop_name': 'Olten', 'stop_lat': 47.351935, 'stop_lon': 7.9077},
