@@ -38,7 +38,8 @@ class Graph:
             self.add_node(node1)
         if node2 not in self.graph:
             self.add_node(node2)
-        self.graph[node1] = (departure_time, node2, arrival_time, identifier)
+        # add the connection to the graph
+        self.graph[node1].append({"from": node1, "to": node2, "planned_departure": departure_time, "planned_arrival": arrival_time, "trip_id": identifier})
 
     def sort_connections(self):
         """
@@ -46,8 +47,8 @@ class Graph:
         """
         # go through all nodes in the graph
         for node in self.graph:
-            # sort the tuples in the array by departure time (index 0)
-            self.graph[node].sort(key=lambda x: x[0])
+            # sort the connections of the node by departure time
+            self.graph[node].sort(key=lambda x: x["planned_departure"])
 
     def dijkstra(self, source: str, target: str, start_time: int):
         """
@@ -81,7 +82,10 @@ class Graph:
             # go through all connections of the current node
             for connection in self.graph[current_node]:
                 # get infos from the connection
-                departure_time, neighbor, arrival_time, train_identifier = connection
+                departure_time = connection["planned_departure"]
+                neighbor = connection["to"]
+                arrival_time = connection["planned_arrival"]
+                train_identifier = connection["trip_id"]
                 # check if we can use the connection -> the departure time of the connection has to be greater than the current time
                 if departure_time >= current_time:
                     # calculate the travel time
