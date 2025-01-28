@@ -3,17 +3,20 @@ from graph import Graph
 
 
 
-def print_path(path):
+def print_path(path, start_node, start_time=0):
     """
     Print the path in a human-readable way
     :param path: tuple with the path (departure_time, node, arrival_time, identifier)
     """
-    for (departure_time, node, arrival_time, identifier) in path:
-        if identifier is None:
-            # The first edge is the source node
-            print(f"Start at {path[0][1]} at {path[0][0]}")
-        else:
-            print(f"Take {identifier} to {node} at {departure_time} and arrive at {arrival_time}")
+    # The first edge is the source node
+    print(f"Start at {start_node} at {start_time}")
+    for key, trips in path.items():
+        trip = trips[0] # only one trip per node as we have one path
+        departure_time = trip["planned_departure"]
+        arrival_time = trip["planned_arrival"]
+        node = trip["to"]
+        identifier = trip["trip_id"]
+        print(f"Take {identifier} to {node} at {departure_time} and arrive at {arrival_time}")
 
 
 # Data structure (tuples sorted by departure time for faster access)
@@ -21,7 +24,7 @@ def print_path(path):
 # times in minutes
 
 # this is intermediate data to test the algorithm
-graph_dict = {
+graph = {
     # departure node with list of trips (departure nodes in the dictionary to be able to access the data easily)
     # "from" is just additional to be accessible anywhere
     # actual_times is a list of tuples with the actual departure and arrival times
@@ -59,21 +62,13 @@ graph_dict = {
 
 
 # initialize graph G (with graph class)
-G = Graph(graph=graph_dict)
+G = Graph(graph=graph)
 
 # Example: shortest path from B to D
 shortest_time, shortest_path = G.dijkstra("Bern", "Brig", 400)
-print(f"Earliest arrival time from B to D is {shortest_time}")
-print_path(shortest_path)
+print(f"Earliest arrival time from Bern to Brig is {shortest_time}")
+print_path(shortest_path, "Bern", 400)
 print("Shortest path:", shortest_path)
-
-
-# get edges that are part of the shortest path
-# @TODO fix that -> get the train identifier for the first edge
-shortest_path[0] = (shortest_path[0][0], shortest_path[0][1], shortest_path[0][2], shortest_path[1][3])  #
-edges_shortest_path = [(shortest_path[i][1], shortest_path[i + 1][1], shortest_path[i][3]) for i in range(len(shortest_path) - 1)]
-# get edges that are not part of the shortest path
-edges_not_shortest_path = [(node, edge[1], edge[3]) for node in graph for edge in graph[node] if (node, edge[1], edge[3]) not in edges_shortest_path]
 
 
 

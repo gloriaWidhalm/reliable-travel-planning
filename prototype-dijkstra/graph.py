@@ -28,7 +28,7 @@ class Graph:
         if node not in self.graph:
             self.graph[node] = []
 
-    def add_edge(self, node1, node2, identifier, departure_time, arrival_time):
+    def add_edge(self, node1, node2, identifier, departure_time, arrival_time, actual_times):
         """
         Add an edge between node1 and node2 with departure and arrival time, and an identifier
         The edge is represented as a tuple (departure_time, node2, arrival_time, identifier)
@@ -39,7 +39,7 @@ class Graph:
         if node2 not in self.graph:
             self.add_node(node2)
         # add the connection to the graph
-        self.graph[node1].append({"from": node1, "to": node2, "planned_departure": departure_time, "planned_arrival": arrival_time, "trip_id": identifier})
+        self.graph[node1].append({"from": node1, "to": node2, "planned_departure": departure_time, "planned_arrival": arrival_time, "trip_id": identifier, "actual_times": actual_times})
 
     def sort_connections(self):
         """
@@ -62,7 +62,7 @@ class Graph:
         # for the source node, the distance is the start time
         earliest_arrival_times[source] = start_time
         # initialize our priority queue with the source node and the start time
-        priority_queue = [(start_time, source, 0, None)] # (arrival_time, node, time, train_identifier), for the priority queue, a tuple is fine
+        priority_queue = [(start_time, source, 0, None, [])] # (arrival_time, node, time, train_identifier, actual_times), for the priority queue, a tuple is fine
         # parent dictionary to store the predecessors of each node (needed to reconstruct the path)
         predecessors = {node: None for node in self.graph}
 
@@ -73,7 +73,7 @@ class Graph:
         while priority_queue:
             # get the node with the earliest arrival time (highest priority)
             # current_time in a sense of cost
-            current_arrival, current_node, current_time, train_identifier = heappop(priority_queue)
+            current_arrival, current_node, current_time, train_identifier, actual_times = heappop(priority_queue)
 
             # check if we have reached the destination (= target node)
             if current_node == target:
@@ -86,6 +86,7 @@ class Graph:
                 neighbor = connection["to"]
                 arrival_time = connection["planned_arrival"]
                 train_identifier = connection["trip_id"]
+                actual_times = connection["actual_times"]
                 # check if we can use the connection -> the departure time of the connection has to be greater than the current time
                 if departure_time >= current_time:
                     # calculate the travel time
@@ -103,21 +104,23 @@ class Graph:
                         # update the arrival time to the neighbor
                         earliest_arrival_times[neighbor] = arrival_time
                         # add the neighbor to the priority queue
-                        heappush(priority_queue, (arrival_time, neighbor, total_cost, train_identifier))
+                        heappush(priority_queue, (arrival_time, neighbor, total_cost, train_identifier, actual_times))
                         # update the predecessor of the neighbor
-                        predecessors[neighbor] = (departure_time, current_node, arrival_time, train_identifier)
+                        predecessors[neighbor] = (departure_time, current_node, arrival_time, train_identifier, actual_times)
 
         # reconstruct the shortest path
-        path = []
+        path = {}
         current_node = target
         while current_node != source:
             # get info from the predecessor
-            departure_time, next_node, arrival_time, train_identifier = predecessors[current_node]
-            path.append((departure_time, current_node, arrival_time, train_identifier))
+            departure_time, next_node, arrival_time, train_identifier, actual_times = predecessors[current_node]
+            # to have the same structure as the graph, only one element in the list
+            path[current_node] = [{"from": next_node, "to": current_node, "planned_departure": departure_time, "planned_arrival": arrival_time, "trip_id": train_identifier, "actual_times": actual_times}]
             current_node = next_node
-        # add the source node to the path
-        path.append((start_time, source, start_time, None))
         # reverse the path to get the correct order (from source to target)
-        path.reverse()
+        path = {key: path[key] for key in reversed(path)}
+
+        # now adjust the keys to be the "from" nodes (not the "to" nodes)
+        path = {trip[0]["from"]: trip for trip in path.values()}
 
         return earliest_arrival_times[target], path
