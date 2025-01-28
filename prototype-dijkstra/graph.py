@@ -62,7 +62,7 @@ class Graph:
         # for the source node, the distance is the start time
         earliest_arrival_times[source] = start_time
         # initialize our priority queue with the source node and the start time
-        priority_queue = [(start_time, source, 0, None)] # (arrival_time, node, time, train_identifier)
+        priority_queue = [(start_time, source, 0, None)] # (arrival_time, node, time, train_identifier), for the priority queue, a tuple is fine
         # parent dictionary to store the predecessors of each node (needed to reconstruct the path)
         predecessors = {node: None for node in self.graph}
 
