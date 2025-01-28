@@ -55,7 +55,7 @@ def calculate_node_importance(g):
 #       here we keep a single adjacency list and highlight the marking step.)
 # -----------------------------------------------------------------------------
 def build_contraction_hierarchy(original_graph):
-    # (a) Copy the original graph so we can augment it with shortcuts
+    # (a) Copy the original graph, so we can augment it with shortcuts
     ch_graph = {node: list(edges) for node, edges in original_graph.items()}
 
     # (b) Sort nodes by importance
@@ -97,7 +97,7 @@ def build_contraction_hierarchy(original_graph):
                 # Add a "shortcut" edge to ch_graph[neigh_i]
                 ch_graph[neigh_i].append((shortcut_dep, neigh_j, shortcut_arr, "shortcut"))
 
-                # Optionally add the reverse shortcut if your graph is undirected or you need both directions
+                # Optionally add the reverse shortcut if your graph is undirected, or you need both directions
                 cost_ji = (arr_j - dep_j) + (arr_i - dep_i)
                 shortcut_dep_rev = arr_j
                 shortcut_arr_rev = arr_j + cost_ji
