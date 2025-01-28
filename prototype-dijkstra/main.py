@@ -1,6 +1,6 @@
 # This file contains code to run the simple Dijsktra pathfinder
 from graph import Graph
-
+from reliability import compute_reliability
 
 
 def print_path(path, start_node, start_time=0):
@@ -64,11 +64,16 @@ graph = {
 # initialize graph G (with graph class)
 G = Graph(graph=graph)
 
-# Example: shortest path from B to D
-shortest_time, shortest_path = G.dijkstra("Bern", "Brig", 400)
+# Example: shortest path from Bern to Brig
+start_time = 400
+shortest_time, shortest_path = G.dijkstra("Bern", "Brig", start_time)
 print(f"Earliest arrival time from Bern to Brig is {shortest_time}")
 print_path(shortest_path, "Bern", 400)
 print("Shortest path:", shortest_path)
 
 
-
+# evaluate reliability of the path
+time_budget = (shortest_time - start_time) * 1 # for the shortest path, we have 100% (and not more) of the time budget
+# compute the reliability of the path
+shortest_path_reliability = compute_reliability(shortest_path, start_time, time_budget, transfer_time=1)
+print(f"Reliability of the shortest path: ~{round(shortest_path_reliability*100)}%")
