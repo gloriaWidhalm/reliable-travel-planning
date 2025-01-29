@@ -7,6 +7,7 @@ from copy import deepcopy
 # The heap queue is a regular heap data structure, where the smallest element is always popped first. (for us with the smallest distance)
 from heapq import heapify, heappop, heappush
 
+from algorithm.helper import is_transfer_needed
 from algorithm.reliability_v2 import compute_reliability, TRANSFER_TIME_DEFAULT
 
 
@@ -52,19 +53,20 @@ class Graph:
             # sort the connections of the node by departure time
             self.graph[node].sort(key=lambda x: x["planned_departure"])
 
-    def dijkstra(self, source: str, target: str, start_time: int):
+    def dijkstra(self, source: str, target: str, start_time: int, transfer_time=TRANSFER_TIME_DEFAULT):
         """
         Compute the shortest path (in terms of earliest arrival time) between any source and target node based on the Dijkstra algorithm
         @param source: the source node
         @param target: the target node
         @param start_time: the start time in minutes
+        @param transfer_time: the transfer time in minutes
         """
         # initialize the arrival_times (distances in terms of time) with infinity
         earliest_arrival_times = {node: float('inf') for node in self.graph}
         # for the source node, the distance is the start time
         earliest_arrival_times[source] = start_time
         # initialize our priority queue with the source node and the start time
-        priority_queue = [(start_time, source, 0, None, [])]  # (arrival_time, node, time, train_identifier, actual_times), for the priority queue, a tuple is fine
+        priority_queue = [(start_time, source, None, [])]  # (arrival_time, node, train_identifier, actual_times), for the priority queue, a tuple is fine
         # parent dictionary to store the predecessors of each node (needed to reconstruct the path)
         predecessors = {node: None for node in self.graph}
 
@@ -75,7 +77,7 @@ class Graph:
         while priority_queue:
             # get the node with the earliest arrival time (highest priority)
             # current_time in a sense of cost
-            current_arrival, current_node, current_time, train_identifier, actual_times = heappop(priority_queue)
+            current_arrival, current_node, current_train_identifier, current_actual_times = heappop(priority_queue)
 
             # check if we have reached the destination (= target node)
             if current_node == target:
@@ -90,15 +92,11 @@ class Graph:
                 train_identifier = connection["trip_id"]
                 actual_times = connection["actual_times"]
                 # check if we can use the connection -> the departure time of the connection has to be greater than the current time
-                if departure_time >= current_time:
-                    # calculate the travel time
-                    travel_time = arrival_time - departure_time
-
-                    # @TODO: currently we assume no transfer time / waiting time at the station
-                    # @TODO: we must also differentiate between being in the same train (no transfer time) and changing trains (transfer time
-                    #  #@TODO -> because each edge is between two nodes (= stops/stations)
-                    # @TODO -> what is this actually?
-                    total_cost = current_arrival + travel_time
+                if departure_time >= current_arrival:
+                    # if we are not in the same train (transfer needed)
+                    # check if we can make the connection (meaning current arrival time + transfer time is smaller than the departure time of the connection)
+                    if is_transfer_needed(current_train_identifier, train_identifier) and current_arrival + transfer_time >= departure_time:
+                        continue
 
                     # check if the new arrival time is smaller than the existing arrival time to the neighbor
                     # only update if the new arrival time is smaller
@@ -106,25 +104,22 @@ class Graph:
                         # update the arrival time to the neighbor
                         earliest_arrival_times[neighbor] = arrival_time
                         # add the neighbor to the priority queue
-                        heappush(priority_queue, (arrival_time, neighbor, total_cost, train_identifier, actual_times))
+                        heappush(priority_queue, (arrival_time, neighbor, train_identifier, actual_times))
                         # update the predecessor of the neighbor
                         predecessors[neighbor] = (departure_time, current_node, arrival_time, train_identifier, actual_times)
 
         # reconstruct the shortest path
-        path = {}
+        path = []
         current_node = target
         while current_node != source:
             # get info from the predecessor
             departure_time, next_node, arrival_time, train_identifier, actual_times = predecessors[current_node]
             # to have the same structure as the graph, only one element in the list
-            path[current_node] = [{"from": next_node, "to": current_node, "planned_departure": departure_time, "planned_arrival": arrival_time, "trip_id": train_identifier,
-                                   "actual_times": actual_times}]
+            path.append({"from": next_node, "to": current_node, "planned_departure": departure_time, "planned_arrival": arrival_time, "trip_id": train_identifier,
+                                   "actual_times": actual_times})
             current_node = next_node
         # reverse the path to get the correct order (from source to target)
-        path = {key: path[key] for key in reversed(path)}
-
-        # now adjust the keys to be the "from" nodes (not the "to" nodes)
-        path = {trip[0]["from"]: trip for trip in path.values()}
+        path.reverse()
 
         return earliest_arrival_times[target], path
 
@@ -155,15 +150,18 @@ class Graph:
             #print("Highest reliability path", path_highest_reliability)
             # get the last (tail) trip from the path with the highest reliability
             last_trip = path_highest_reliability[1][-1]  # [1] is the element position of the trips, -1 is the last
+            print("Last trip", last_trip)
             # get all edges/arcs (connections to other stations) that are adjacent (neighbors) to the last trip (e.g., all trips from Bern to somewhere else)
             # first, we need the station (which is the arrival station, or "to")
             last_station = last_trip["to"]
+            print("Last station", last_station)
             # then we can use the graph-structure to get all edges (connections) from this node/station
             # @todo: add function that returns only the connections that are after our start time
             possible_connections = self.graph[last_station]  # possible connections = adjacent edges
             # go through all adjacent edges to "build"/extend our path towards our target/destination further
             for connection in possible_connections:
                 extended_trips = path_highest_reliability[1]  # [1] are the trips in the tuple
+                print("*Get trips from highest reliabile path", extended_trips)
                 extended_trips.append(connection)
                 # print("Extended trips", extended_trips)
                 # get the arrival probability and the probability that the connection is made

@@ -1,6 +1,6 @@
 # This file contains code to run the simple Dijsktra pathfinder
 from graph import Graph
-from reliability import compute_reliability
+from reliability_v2 import compute_reliability
 
 
 def print_path(path, start_node, start_time=0):
@@ -10,8 +10,7 @@ def print_path(path, start_node, start_time=0):
     """
     # The first edge is the source node
     print(f"Start at {start_node} at {start_time}")
-    for key, trips in path.items():
-        trip = trips[0] # only one trip per node as we have one path
+    for trip in path:
         departure_time = trip["planned_departure"]
         arrival_time = trip["planned_arrival"]
         node = trip["to"]
@@ -61,25 +60,37 @@ graph = {
 }
 
 
-# initialize graph G (with graph class)
-G = Graph(graph=graph)
+if __name__ == "__main__":
+    # Code for testing reliability, most reliable path, etc.
+    # initialize graph G (with graph class)
+    G = Graph(graph=graph)
 
-# Example: shortest path from Bern to Brig
-start_time = 400
-shortest_time, shortest_path = G.dijkstra("Bern", "Brig", start_time)
-# print(f"Earliest arrival time from Bern to Brig is {shortest_time}")
-# print_path(shortest_path, "Bern", 400)
-# print("Shortest path:", shortest_path)
-#
-#
-# # evaluate reliability of the path
-time_budget = (shortest_time - start_time) * 2 # for the shortest path, we have 100% (and not more) of the time budget
-# # compute the reliability of the path
-# shortest_path_reliability = compute_reliability(shortest_path, start_time, time_budget, transfer_time=1)
-# print(f"Reliability of the shortest path: ~{round(shortest_path_reliability*100)}%")
+    # Example: shortest path from Bern to Brig
+    start_time = 400
+    start = "Bern"
+    destination = "Thun"
+    shortest_time, shortest_path = G.dijkstra(start, destination, start_time)
+    # print(f"Earliest arrival time from Bern to Brig is {shortest_time}")
+    # print_path(shortest_path, "Bern", 400)
+    # print("Shortest path:", shortest_path)
+    #
+    #
+    # # evaluate reliability of the path
+    time_budget = (shortest_time - start_time) * 2 # for the shortest path, we have 100% (and not more) of the time budget
+    # # compute the reliability of the path
+    #shortest_path_reliability = compute_reliability(shortest_path, start_time, time_budget, transfer_time=5)
+    #print(f"Reliability of the shortest path: ~{round(shortest_path_reliability*100)}%")
 
-# Test finding the most reliable path
-most_reliable_path = G.find_most_reliable_path("Bern", "Brig", start_time, time_budget)
-print("We go from", "Bern", "to", "Brig", "starting at", start_time, "with a time budget of ", time_budget, "earliest possible arrival", shortest_time, "latest possible arrival", start_time + time_budget)
-print("Most reliable path")
-print(most_reliable_path)
+
+
+
+
+
+
+
+
+    # Test finding the most reliable path
+    most_reliable_path = G.find_most_reliable_path(start, destination, start_time, time_budget)
+    print("We go from", start, "to", destination, "starting at", start_time, "with a time budget of ", time_budget, "earliest possible arrival", shortest_time, "latest possible arrival", start_time + time_budget)
+    print("Most reliable path")
+    print(most_reliable_path)

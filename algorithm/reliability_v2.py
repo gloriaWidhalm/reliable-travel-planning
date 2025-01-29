@@ -1,4 +1,7 @@
+from copy import deepcopy
 from typing import List
+
+from algorithm.helper import is_transfer_needed
 
 TRANSFER_TIME_DEFAULT = 5
 
@@ -14,17 +17,6 @@ def compute_probability(time: int, time_distribution: List[int]) -> float:
     # compute the probability
     probability = count / total
     return probability
-
-
-def is_transfer_needed(trip_identifier_1: str, trip_identifier_2: str) -> bool:
-    """
-    Check if a transfer is needed between two trips. If the trip identifiers are different, a transfer is needed.
-    Otherwise, we assume we are in the same train and no transfer is needed.
-    """
-    # check if the trip identifiers are different
-    if trip_identifier_1 != trip_identifier_2:
-        return True
-    return False
 
 
 # Add the departure time probabilities to the data (for each trip), they don't change
@@ -224,7 +216,7 @@ def compute_reliability(
     """
     # First, add the departure probabilities to the trips
     # create a deep copy of the station trips to avoid modifying the original data
-    station_trips_copy = station_trips.copy()
+    station_trips_copy = deepcopy(station_trips)
 
     # different handling / exception: if the first trip is our start (meaning "from" and "to" are the same node/station, we skip this trip and take the next one)
     if station_trips_copy[0]["from"] == station_trips_copy[0]["to"]:
