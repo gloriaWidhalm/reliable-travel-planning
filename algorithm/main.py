@@ -67,13 +67,19 @@ G = Graph(graph=graph)
 # Example: shortest path from Bern to Brig
 start_time = 400
 shortest_time, shortest_path = G.dijkstra("Bern", "Brig", start_time)
-print(f"Earliest arrival time from Bern to Brig is {shortest_time}")
-print_path(shortest_path, "Bern", 400)
-print("Shortest path:", shortest_path)
+# print(f"Earliest arrival time from Bern to Brig is {shortest_time}")
+# print_path(shortest_path, "Bern", 400)
+# print("Shortest path:", shortest_path)
+#
+#
+# # evaluate reliability of the path
+time_budget = (shortest_time - start_time) * 2 # for the shortest path, we have 100% (and not more) of the time budget
+# # compute the reliability of the path
+# shortest_path_reliability = compute_reliability(shortest_path, start_time, time_budget, transfer_time=1)
+# print(f"Reliability of the shortest path: ~{round(shortest_path_reliability*100)}%")
 
-
-# evaluate reliability of the path
-time_budget = (shortest_time - start_time) * 1 # for the shortest path, we have 100% (and not more) of the time budget
-# compute the reliability of the path
-shortest_path_reliability = compute_reliability(shortest_path, start_time, time_budget, transfer_time=1)
-print(f"Reliability of the shortest path: ~{round(shortest_path_reliability*100)}%")
+# Test finding the most reliable path
+most_reliable_path = G.find_most_reliable_path("Bern", "Brig", start_time, time_budget)
+print("We go from", "Bern", "to", "Brig", "starting at", start_time, "with a time budget of ", time_budget, "earliest possible arrival", shortest_time, "latest possible arrival", start_time + time_budget)
+print("Most reliable path")
+print(most_reliable_path)
