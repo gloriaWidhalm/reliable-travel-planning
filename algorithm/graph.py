@@ -53,7 +53,7 @@ class Graph:
             # sort the connections of the node by departure time
             self.graph[node].sort(key=lambda x: x["planned_departure"])
 
-    def dijkstra(self, source: str, target: str, start_time: int, transfer_time=TRANSFER_TIME_DEFAULT):
+    def dijkstra(self, source: str, target: str, start_time: int, transfer_time=TRANSFER_TIME_DEFAULT) -> tuple[int, list[dict]]:
         """
         Compute the shortest path (in terms of earliest arrival time) between any source and target node based on the Dijkstra algorithm
         @param source: the source node
@@ -123,7 +123,7 @@ class Graph:
 
         return earliest_arrival_times[target], path
 
-    def find_most_reliable_path(self, source: str, target: str, start_time: int, time_budget: int, transfer_time=TRANSFER_TIME_DEFAULT):
+    def find_most_reliable_path(self, source: str, target: str, start_time: int, time_budget: int, transfer_time=TRANSFER_TIME_DEFAULT) -> tuple[int, float, list[dict]]:
         """
         Find the most reliable "itinerary" / path using a network search algorithm, based on the reference paper "The most reliable flight itinerary problem" (Redmond et al., 2019)
         In this context, path, sequence of trips and itinerary means basically the same.
@@ -133,11 +133,13 @@ class Graph:
         """
         # Initialize most reliable path
         most_reliable_path = None
-        # Initialize list with partial paths/itineraries (reliability, list of nodes part of the path (node with actual time information), time between start time and the
-        # scheduled arrival of the current tail flight in the itinerary/path)
-        priority_queue = [(1, [{"from": source, "to": source, "actual_times": []}], 0, None)]
-        # Initialize k (the k-th trip we are looking at)
+        # Initialize k (used as additional "tiebreaker" for the comparison of the heap queue)
         k = 1
+        # Initialize list with partial paths/itineraries (reliability, label k (as additional identifier of the partial path, time between start time and the scheduled arrival
+        # of the current tail trip in the itinerary/path, probability of last/tail trip arriving at time t dependent on making the connections, and list of nodes part of the
+        # path (node with actual time information))
+        priority_queue = [(1, k, 0, None, [{"from": source, "to": source, "actual_times": []}])]
+        position_of_trips = 4  # position of the trips in the tuple
 
         # heapify the priority queue to maintain the heap property (from the initial list)
         heapify(priority_queue)
@@ -147,36 +149,28 @@ class Graph:
         while priority_queue:
             # get path with the highest reliability from queue
             path_highest_reliability = heappop(priority_queue)
-            #print("Highest reliability path", path_highest_reliability)
             # get the last (tail) trip from the path with the highest reliability
-            last_trip = path_highest_reliability[1][-1]  # [1] is the element position of the trips, -1 is the last
-            print("Last trip", last_trip)
+            last_trip = deepcopy(path_highest_reliability[position_of_trips][-1])  # is the element position of the trips, -1 is the last
             # get all edges/arcs (connections to other stations) that are adjacent (neighbors) to the last trip (e.g., all trips from Bern to somewhere else)
             # first, we need the station (which is the arrival station, or "to")
             last_station = last_trip["to"]
-            print("Last station", last_station)
             # then we can use the graph-structure to get all edges (connections) from this node/station
             # @todo: add function that returns only the connections that are after our start time
             possible_connections = self.graph[last_station]  # possible connections = adjacent edges
             # go through all adjacent edges to "build"/extend our path towards our target/destination further
             for connection in possible_connections:
-                extended_trips = path_highest_reliability[1]  # [1] are the trips in the tuple
-                print("*Get trips from highest reliabile path", extended_trips)
+                extended_trips = deepcopy(path_highest_reliability[position_of_trips])  # the trips in the tuple
                 extended_trips.append(connection)
-                # print("Extended trips", extended_trips)
-                # get the arrival probability and the probability that the connection is made
                 probability_arrival, probability_connection_made = compute_reliability(extended_trips, start_time, time_budget, complete_path=False, transfer_time=transfer_time)
-                # print("Probability arrival", probability_arrival)
-                # print("Probability connection made", probability_connection_made)
 
                 # adjust the total time (time between start time and the scheduled arrival of the current tail flight in the itinerary/path)
-                total_time_between_start_scheduled_arrival = path_highest_reliability[2] + connection["planned_arrival"] - start_time  # @todo, check if this is correct
+                total_time_between_start_scheduled_arrival = connection["planned_arrival"] - start_time  # @todo, check if this is correct
 
                 # add the connection and the obtained information to the path (since it is a tuple, we need to do it this way)
-                extended_path = (probability_connection_made, extended_trips, total_time_between_start_scheduled_arrival, probability_arrival)
+                extended_path = (probability_connection_made, k, total_time_between_start_scheduled_arrival, probability_arrival, extended_trips)
 
-                # Update k
-                k += 1  # @todo check if we need to use k, and if so, how exactly (currently don't use it)
+                # Update k (label for the path)
+                k += 1
 
                 # check if we have reached the destination (= target node)
                 if connection["to"] == target:
@@ -186,11 +180,10 @@ class Graph:
                 else:
                     # add the extended path to the priority queue
                     heappush(priority_queue, extended_path)
-                    print("-------")
-                    print("Extended path")
-                    print(extended_path)
-                    print("Extended trips")
-                    print(extended_trips)
-                    print("-------")
-
-        return most_reliable_path
+        # get the arrival time of the most reliable path
+        arrival_time = start_time + most_reliable_path[2]
+        reliability = most_reliable_path[0]
+        most_reliable_path_transformed = most_reliable_path[position_of_trips]
+        # remove first element (the source station)
+        most_reliable_path_transformed.pop(0)
+        return arrival_time, reliability, most_reliable_path_transformed
