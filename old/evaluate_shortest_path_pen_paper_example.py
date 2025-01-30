@@ -103,5 +103,6 @@ if __name__ == "__main__":
     # arrival) Therefore, it is only ~10% If we set the time budget a bit higher, the two other trips are also considered (arrive within time budget) and the reliability
     # increases to ~ 62% as in the pen and paper example
 
-    shortest_path_reliability = compute_reliability(shortest_path, start_time, time_budget*1.3, transfer_time=5)
-    print(f"Reliability as in pen & paper example (slightly increased time budget): {round(shortest_path_reliability * 100, 2)}%")
+    increased_time_budget = time_budget * 2
+    shortest_path_reliability = compute_reliability(shortest_path, start_time, increased_time_budget, transfer_time=5)
+    print(f"Reliability as in pen & paper example (slightly increased time budget {increased_time_budget}): {round(shortest_path_reliability * 100, 2)}%")

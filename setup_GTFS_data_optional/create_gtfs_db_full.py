@@ -41,7 +41,7 @@ def load_data(connection):
 # main
 if __name__ == "__main__":
     # File path:
-    gtfs_path = './data/gtfs/gtfs_train.zip'
+    gtfs_path = '../data/gtfs/gtfs_train.zip'
 
     file_name_suffix = gtfs_path.split('/')[-1].split('.')[0]
     # Connect to the database

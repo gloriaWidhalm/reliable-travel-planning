@@ -3,6 +3,7 @@ import logging
 import duckdb
 
 from constants import LOG_LEVEL
+from algorithm.prototype import get_specific_station_identifier_from_name
 
 logging.basicConfig(level=LOG_LEVEL)
 
@@ -11,7 +12,6 @@ def setup_delay_data(db_connection, data_path, delete_old=False):
     Set up the delay data (used as input for our input, building the graph data for the algorithm (our railway network))
     """
     logging.info(f"Setting up delay data from {data_path} in database {db_path}")
-
 
     # delete old data
     if delete_old:
@@ -115,37 +115,16 @@ def check_database_entries(db_connection):
 def get_list_of_stop_identifiers_with_name(db_connection):
     query = '''SELECT DISTINCT BPUIC, STOP_NAME FROM services'''
     return db_connection.execute(query).df()
-def get_specific_identifier(db_connection, stop_name=None, stop_id=None):
-    if stop_name:
-        query = f'''SELECT BPUIC FROM services WHERE STOP_NAME = '{stop_name}' limit 1 '''
-    elif stop_id:
-        query = f'''SELECT STOP_NAME FROM services WHERE BPUIC = '{stop_id}' limit 1'''
-    df = db_connection.execute(query).df()
-    # rename columns to "STOP"
-    df.columns = ['STOP']
-    return df
 
 if __name__ == "__main__":
     # Connect to the database
     db_path = "../transport_data.db"
     db_connection = duckdb.connect(db_path, read_only=False)
-    setup_delay_data(db_connection, '../data/delay_data/2024-05*.csv', delete_old=False)
+    setup_delay_data(db_connection, '../data/delay_data/2024-*.csv', delete_old=True)
 
     rename_columns_from_german_to_english(db_connection)
 
     #stop_identifiers = get_list_of_stop_identifiers_with_name(db_connection)
 
     check_database_entries(db_connection)
-    exit(0)
-
-    desired_stop_id = 8507000 #"8501008"
-    desired_stop_name = None #"Bern"
-    desired_stop = desired_stop_name if desired_stop_name else desired_stop_id
-    stop = get_specific_identifier(db_connection, stop_name=desired_stop_name, stop_id=desired_stop_id)
-    if stop.empty:
-        print(f"Stop with name {desired_stop_name} not found")
-    else:
-        stop_name = stop['STOP'][0]
-        print(f"Stop name for identifier {desired_stop}: {stop_name if stop_name else 'not found'}")
-
 

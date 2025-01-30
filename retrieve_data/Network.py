@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
+import logging
 
 # In[23]:
 
@@ -9,14 +10,13 @@ import pandas as pd
 import numpy as np
 from collections import defaultdict
 from collections import defaultdict
-import pandas as pd
-import numpy as np
 import json
 
-def get_data(date='2024-10-01'):
+def get_data(date='2024-10-01', database_path='transport_data.db'):
     """Process transport data for a given date"""
     # Connect to the database
-    connection = duckdb.connect("transport_data.db", read_only=False)
+    logging.info(f"Getting data for date {date}, from database {database_path}")
+    connection = duckdb.connect(database_path, read_only=False)
     
     weekday = pd.to_datetime(date).weekday() + 1
     
@@ -85,15 +85,6 @@ def get_data(date='2024-10-01'):
     return result_df
 
 
-# In[24]:
-
-
-data=get_data(date='2024-10-01')
-
-
-# In[20]:
-
-
 def process_route_data(result_df, start_time=700, end_time=880, start_stop=8503000):
     """
     Process route data and generate dynamic route graph - all in one function
@@ -107,6 +98,9 @@ def process_route_data(result_df, start_time=700, end_time=880, start_stop=85030
     Returns:
     dict: Generated route graph
     """
+    logging.info(f"Processing route data")
+    logging.debug(f"Start time: {start_time}, End time: {end_time}, Start stop: {start_stop}")
+    #logging.debug(f"Data: {result_df}")
     from collections import defaultdict
     import json
     import numpy as np
@@ -132,12 +126,14 @@ def process_route_data(result_df, start_time=700, end_time=880, start_stop=85030
                 dep_col = prediction_columns[i]
                 arr_col = prediction_columns[i + 1]
                 paired_columns.append((dep_col, arr_col))
-        
+        logging.debug(f"Paired columns: {paired_columns}")
         return paired_columns
     
     # Filter and sort data
     mask = (result_df['PLANNED_ARRIVAL'] >= start_time) & (result_df['PLANNED_DEPARTURE'] <= end_time)
     df_filtered = result_df[mask]
+    logging.debug("Filtering data")
+    logging.debug(df_filtered)
     data = df_filtered.sort_values(['TRIP_IDENTIFIER', 'PLANNED_ARRIVAL'])
     
     # Initialize graph
@@ -154,6 +150,7 @@ def process_route_data(result_df, start_time=700, end_time=880, start_stop=85030
         return predictions if predictions else None
     
     def build_line_path(stop, arrival_time, trip_identifier, prev_departure=None):
+        logging.debug(f"Building line path for stop {stop} at time {arrival_time}")
         next_stops = data[
             (data['TRIP_IDENTIFIER'] == trip_identifier) &
             (data['PLANNED_ARRIVAL'] > arrival_time)
@@ -164,6 +161,9 @@ def process_route_data(result_df, start_time=700, end_time=880, start_stop=85030
             (data['PLANNED_ARRIVAL'] > arrival_time) &
             (data['TRIP_IDENTIFIER'] != trip_identifier)
         ].sort_values('PLANNED_ARRIVAL')
+
+        logging.debug(f"Next stops for stop {stop}: {next_stops}")
+        logging.debug(f"Transfers for stop {stop}: {transfers}")
         
         if not next_stops.empty:
             next_stop_data = next_stops.iloc[0]
@@ -193,7 +193,6 @@ def process_route_data(result_df, start_time=700, end_time=880, start_stop=85030
                 if transition not in graph[stop]:
                     graph[stop].append(transition)
                     build_line_path(next_stop, next_arrival, trip_identifier, current_departure)
-        
         for _, transfer in transfers.iterrows():
             new_trip_identifier = transfer['TRIP_IDENTIFIER']
             new_arrival = int(transfer['PLANNED_ARRIVAL'])
@@ -214,13 +213,17 @@ def process_route_data(result_df, start_time=700, end_time=880, start_stop=85030
                 if transition not in graph[stop]:
                     graph[stop].append(transition)
                     build_line_path(stop, new_arrival, new_trip_identifier)
-    
+    logging.debug(f"Data, looking for stop identifier {start_stop}")
+    logging.debug(data['BPUIC'])
     # Process initial routes
     initial_routes = data[
-        (data['BPUIC'] == start_stop) & 
+        (data['BPUIC'] == start_stop) &
         (data['PLANNED_ARRIVAL'] >= start_time)
     ].sort_values('PLANNED_ARRIVAL')
-    
+
+    logging.debug("Initial routes")
+    logging.debug(initial_routes)
+
     if not initial_routes.empty:
         initial_route = initial_routes.iloc[0]
         initial_trip_identifier = initial_route['TRIP_IDENTIFIER']
@@ -237,13 +240,11 @@ def process_route_data(result_df, start_time=700, end_time=880, start_stop=85030
     return dict(graph)
 
 
-# In[27]:
 
-
-process_route_data(data,700,760,8503000)
-
-
-# In[ ]:
+if __name__ == "__main__":
+    # Test retrieving graph data (with main, so it is not executed when the functions are imported)
+    data=get_data(date='2024-10-01')
+    graph=process_route_data(data,700,760,8503000)
 
 
 
