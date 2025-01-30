@@ -9,6 +9,9 @@ def print_path(path, start_node, start_time=0):
     :param path: tuple with the path (departure_time, node, arrival_time, identifier)
     """
     # The first edge is the source node
+    if path is None:
+        print("No path found")
+        return
     print(f"Start at {start_node} at {start_time}")
     for trip in path:
         departure_time = trip["planned_departure"]
@@ -68,7 +71,7 @@ if __name__ == "__main__":
     # Example: shortest path from Bern to Brig
     start_time = 400
     start = "Bern"
-    destination = "Brig"
+    destination = "Visp"
     shortest_time, shortest_path = G.dijkstra(start, destination, start_time)
     # print(f"Earliest arrival time from Bern to Brig is {shortest_time}")
     # print_path(shortest_path, "Bern", 400)
@@ -76,13 +79,13 @@ if __name__ == "__main__":
     #
     #
     # # evaluate reliability of the path
-    time_budget = (shortest_time - start_time) * 1.5 # for the shortest path, we have 100% (and not more) of the time budget
+    time_budget = (shortest_time - start_time) * 1.7 # for the shortest path, we have 100% (and not more) of the time budget
     # # compute the reliability of the path
-    #shortest_path_reliability = compute_reliability(shortest_path, start_time, time_budget, transfer_time=5)
-    #print(f"Reliability of the shortest path: ~{round(shortest_path_reliability*100)}%")
+    shortest_path_reliability = compute_reliability(shortest_path, start_time, (shortest_time - start_time) * 1, transfer_time=5)
+    print(f"Reliability of the shortest path: {round(shortest_path_reliability*100, 2)}%")
 
     # Test finding the most reliable path
     reliable_arrival_time, reliability, most_reliable_path = G.find_most_reliable_path(start, destination, start_time, int(time_budget))
     print("We go from", start, "to", destination, "starting at", start_time, "with a time budget of", time_budget, "earliest possible arrival", shortest_time, "latest possible arrival", start_time + time_budget)
-    print("Reliability:", reliability, "arrival time with most reliable path", reliable_arrival_time)
+    print("Reliability:", f"{round(reliability*100, 2)}%", "arrival time with most reliable path", reliable_arrival_time)
     print_path(most_reliable_path, start, start_time)

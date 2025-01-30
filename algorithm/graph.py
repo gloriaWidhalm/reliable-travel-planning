@@ -3,13 +3,15 @@
 # A baseline for this class is this tutorial: https://www.datacamp.com/tutorial/dijkstra-algorithm-in-python
 # Also, the dijkstra algorithm is based on a ChatGPT chat (2024-11-20): https://chatgpt.com/c/673cb220-5308-8013-bf0d-36f55f78e707
 # And also the chat on (2024-11-24): https://chatgpt.com/share/67431b48-4a30-8013-9c88-6cc073907030 (adjustments for arrival time and different data structure)
+import logging
 from copy import deepcopy
 # The heap queue is a regular heap data structure, where the smallest element is always popped first. (for us with the smallest distance)
 from heapq import heapify, heappop, heappush
 
 from algorithm.helper import is_transfer_needed
 from algorithm.reliability_v2 import compute_reliability, TRANSFER_TIME_DEFAULT
-
+# set log level
+logging.basicConfig(level=logging.DEBUG)
 
 # Maybe this is redundant, and we want to use networkx instead!
 
@@ -138,7 +140,7 @@ class Graph:
         # Initialize list with partial paths/itineraries (reliability, label k (as additional identifier of the partial path, time between start time and the scheduled arrival
         # of the current tail trip in the itinerary/path, probability of last/tail trip arriving at time t dependent on making the connections, and list of nodes part of the
         # path (node with actual time information))
-        priority_queue = [(1, k, 0, None, [{"from": source, "to": source, "actual_times": []}])]
+        priority_queue = [(0, k, 0, None, [{"from": source, "to": source, "actual_times": []}])]
         position_of_trips = 4  # position of the trips in the tuple
 
         # heapify the priority queue to maintain the heap property (from the initial list)
@@ -159,6 +161,8 @@ class Graph:
             possible_connections = self.graph[last_station]  # possible connections = adjacent edges
             # go through all adjacent edges to "build"/extend our path towards our target/destination further
             for connection in possible_connections:
+                if connection["from"] == "Spiez" and connection["to"] == "Visp" and connection["planned_arrival"] == 602 and connection["planned_departure"] == 576:
+                    print("Spiez-Visp")
                 extended_trips = deepcopy(path_highest_reliability[position_of_trips])  # the trips in the tuple
                 extended_trips.append(connection)
                 probability_arrival, probability_connection_made = compute_reliability(extended_trips, start_time, time_budget, complete_path=False, transfer_time=transfer_time)
@@ -174,15 +178,25 @@ class Graph:
 
                 # check if we have reached the destination (= target node)
                 if connection["to"] == target:
+                    # compute the actual reliability of the path (probability of the last trip arriving at time t dependent on making the connections * probability of making the connections)
+                    reliability_path = probability_arrival * probability_connection_made
+                    logging.debug(f"Reliability path: {reliability_path}, probability arrival: {probability_arrival}, probability connection made: {probability_connection_made}")
+                    logging.debug(f"For path: {extended_trips}")
+                    new_most_reliable_path = (reliability_path, k, total_time_between_start_scheduled_arrival, probability_arrival, extended_trips)
                     # check if the new path is more reliable than the current most reliable path
-                    if most_reliable_path is None or probability_arrival > most_reliable_path[0]:
-                        most_reliable_path = extended_path
+                    if most_reliable_path is None or reliability_path > most_reliable_path[0]:
+                        logging.debug(f"New most reliable path: {new_most_reliable_path}")
+                        most_reliable_path = new_most_reliable_path
                 else:
                     # add the extended path to the priority queue
                     heappush(priority_queue, extended_path)
+        logging.debug(f"Most reliable path: {most_reliable_path}")
+        reliability = most_reliable_path[0]
+        # check if the reliability is 0 (no reliable path found)
+        if reliability == 0:
+            return None, 0, None
         # get the arrival time of the most reliable path
         arrival_time = start_time + most_reliable_path[2]
-        reliability = most_reliable_path[0]
         most_reliable_path_transformed = most_reliable_path[position_of_trips]
         # remove first element (the source station)
         most_reliable_path_transformed.pop(0)
