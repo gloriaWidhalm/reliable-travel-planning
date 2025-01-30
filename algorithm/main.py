@@ -1,6 +1,6 @@
-# This file contains code to run the simple Dijsktra pathfinder
-from graph import Graph
-from reliability_v2 import compute_reliability
+# This file contains code to run the simple Dijsktra pathfinder -> with the pen and paper example, with reliability evaluation
+from algorithm.graph import Graph
+from algorithm.reliability_v2 import compute_reliability
 
 
 def print_path(path, start_node, start_time=0):

@@ -1,8 +1,8 @@
 # This file contains code to run the simple Dijsktra pathfinder
 from algorithm.main import print_path
 from constants import LOG_LEVEL
-from graph import Graph
-from reliability_v2 import compute_reliability
+from algorithm.graph import Graph
+from algorithm.reliability_v2 import compute_reliability
 
 import logging
 
@@ -54,6 +54,22 @@ def get_graph_data():
         ]
     }
 
+    # even more simple graph for testing
+    graph = {
+        'Zurich': [
+            {"from": "Zurich", "planned_departure": 5, "to": "Olten", "planned_arrival": 15, "trip_id": "T1", "actual_times": [(5, 15), (6, 15), (10, 20)]}
+        ],
+        'Olten': [
+            {"from": "Olten", "planned_departure": 20, "to": "Bern", "planned_arrival": 30, "trip_id": "T2", "actual_times": [(20, 30), (20, 32), (25, 35)]}
+        ],
+        'Bern': [
+            {"from": "Bern", "planned_departure": 35, "to": "Brig", "planned_arrival": 45, "trip_id": "T3", "actual_times": [(35, 45), (37, 47), (40, 50)]}
+        ],
+        'Brig': [
+            {"from": "Brig", "planned_departure": 55, "to": "Milan", "planned_arrival": 65, "trip_id": "T4", "actual_times": [(55, 65), (57, 67), (60, 70)]}
+        ]
+    }
+
     return graph
 
 
@@ -70,7 +86,7 @@ if __name__ == "__main__":
 
     # Example: shortest path from Bern to Brig
     start_time = 0
-    start = "Bern"
+    start = "Zurich"
     destination = "Brig"
     shortest_time, shortest_path = G.dijkstra(start, destination, start_time)
     print("We go from", start, "to", destination, "starting at", start_time, "earliest possible arrival", shortest_time)
@@ -82,3 +98,10 @@ if __name__ == "__main__":
     # # compute the reliability of the path
     shortest_path_reliability = compute_reliability(shortest_path, start_time, time_budget, transfer_time=5)
     print(f"Reliability of the shortest path: {round(shortest_path_reliability * 100, 2)}%")
+    
+    # Note: Here, the reliability is based on time budget 1 (which means that the path is reliable if it is completed within the time budget, which is the earliest possible
+    # arrival) Therefore, it is only ~10% If we set the time budget a bit higher, the two other trips are also considered (arrive within time budget) and the reliability
+    # increases to ~ 62% as in the pen and paper example
+
+    shortest_path_reliability = compute_reliability(shortest_path, start_time, time_budget*1.3, transfer_time=5)
+    print(f"Reliability as in pen & paper example (slightly increased time budget): {round(shortest_path_reliability * 100, 2)}%")

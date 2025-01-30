@@ -123,7 +123,6 @@ class Graph:
         current_node = target
         while current_node != source:
             # get info from the predecessor
-            print("Current node", current_node, "Predecessors: ", predecessors)
             departure_time, next_node, arrival_time, train_identifier, actual_times = predecessors[current_node]
             # to have the same structure as the graph, only one element in the list
             path.append({"from": next_node, "to": current_node, "planned_departure": departure_time, "planned_arrival": arrival_time, "trip_id": train_identifier,
