@@ -97,7 +97,7 @@ def get_specific_station_name_from_identifier(db_connection=None, stop_id=None):
 
 
 if __name__ == "__main__":
-    start_time = 0  # 0 minutes, please set this to what you need
+    start_time = 600  # 0 minutes, please set this to what you need
 
     # you need to enter stations with their identifier, names are not supported
     # here are some examples, under "OPUIC" you can find the station identifier: https://data.sbb.ch/explore/dataset/stadtefahrplan/table/ (please without commas)
