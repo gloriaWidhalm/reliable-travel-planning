@@ -3,10 +3,11 @@ from typing import List
 import logging
 
 from algorithm.helper import is_transfer_needed
+from constants import LOG_LEVEL
 
 TRANSFER_TIME_DEFAULT = 5
 # set log level
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=LOG_LEVEL)
 
 
 def compute_probability(time: int, time_distribution: List[int]) -> float:
@@ -111,7 +112,6 @@ def compute_connection_probability(
     """
     # for each departure time, compute the probability of making a connection
     probabilities = []
-    logging.debug(f"++Arrival times: {arrival_times}")
     # multiply probability of departing at time t with the probability of arriving at or before time (t - transfer time)
     for i in range(len(departure_probabilities)):
         # only consider the arrival time probabilities that are before the departure time - transfer time
@@ -125,7 +125,7 @@ def compute_connection_probability(
             time_limit, arrival_probabilities, arrival_times
         )
         probabilities.append(departure_probabilities[i][1] * arrival_probability)
-        logging.debug(f"Departure time: {departure_probabilities[i][0]}, departure probabilities {departure_probabilities[i][1]} Arrival probability: {arrival_probability}")
+        logging.debug(f"Departure time: {departure_probabilities[i][0]}, departure probabilities {departure_probabilities[i][1]} Arrival probability: {arrival_probability}, arrival times: {arrival_times}")
         logging.debug(f"**Probabilities for connection made: {probabilities}, sum: {sum(probabilities)}")
     # sum the probabilities
     probability = sum(probabilities)
@@ -205,7 +205,7 @@ def compute_arrival_probability_last_trip(start_time: int, time_budget: int, arr
     Compute the probability of arriving at the destination at or before the time limit for the last trip
     """
     time_limit = start_time + time_budget
-    logging.debug(f"Arrival probabilities last trip: {arrival_probabilities}, Arrival times last trip: {arrival_times}")
+    #logging.debug(f"Arrival probabilities last trip: {arrival_probabilities}, Arrival times last trip: {arrival_times}")
     probability_arrival_before_time_limit = compute_probability_to_arrive_at_or_before(
         time_limit, arrival_probabilities, arrival_times
     )
@@ -223,6 +223,8 @@ def compute_reliability(
     Compute the reliability of a connection given a list of trips and a start time and time budget
     station_trips because it is a dictionary with the station as key and the trips from this station as values
     """
+    logging.debug(f"#########################################")
+    logging.debug(f"Compute reliability for station trips: {station_trips}")
     # First, add the departure probabilities to the trips
     # create a deep copy of the station trips to avoid modifying the original data
     station_trips_copy = deepcopy(station_trips)
@@ -241,6 +243,7 @@ def compute_reliability(
 
     # extract the first trip from the station trips
     first_trip = station_trips_copy[0]  # for a path, we have always only one trip per station, therefore we can use [0]
+    #logging.debug(f"First trip: {first_trip}")
 
     # get arrival times and arrival probabilities for the first trip
     arrival_times_first_trip = get_arrival_times_from_trip(first_trip)
@@ -257,8 +260,10 @@ def compute_reliability(
         return compute_arrival_probability_last_trip(
             start_time, time_budget, arrival_probabilities_first_trip, arrival_times_first_trip
         )
+    logging.debug("-----------------------------")
     # extract the second trip from the station trips (also handled a bit differently)
     second_trip = station_trips_copy[1]
+    #logging.debug(f"Second trip: {second_trip}")
     # all the trips from the third trip onwards until the last trip
     trips_from_third_trip = station_trips_copy[2:]
     # compute the probability of making the first connection (between the first and second trip)
@@ -273,7 +278,6 @@ def compute_reliability(
         transfer_needed_first_second_trip,
         transfer_time,
     )
-
     # compute arrival probabilities for second trip given that we made the connection (between the first and second trip)
     arrival_times_second_trip = get_arrival_times_from_trip(second_trip)
     arrival_probabilities_second_trip = []
@@ -304,6 +308,8 @@ def compute_reliability(
             return probability_arrival_before_time_limit, connection_made_first_second_trip
         return probability_arrival_before_time_limit * connection_made_first_second_trip
 
+    logging.debug("-----------------------------")
+
     is_third_trip = True  # different handling for the third trip
 
     # prepare the data for the reliability computation
@@ -317,6 +323,7 @@ def compute_reliability(
     # then, we prepare the data for the next trip (iteration)
     # we repeat this for all trips after the second trip
     for current_trip in trips_from_third_trip:
+        #logging.debug(f"Current trip: {current_trip}")
         if is_third_trip:
             previous_trip = second_trip
             arrival_probabilities_previous_trip = arrival_probabilities_second_trip
@@ -352,6 +359,7 @@ def compute_reliability(
             arrival_probabilities.append((arrival_time, probability))
         # only use unique arrival probabilities
         arrival_probabilities = list(set(arrival_probabilities))
+        logging.debug(f"### Arrival probabilities in loop {arrival_probabilities}")
 
         # at the end of this iteration, we prepare the previous trip for the next iteration
         previous_trip = current_trip
@@ -364,6 +372,9 @@ def compute_reliability(
         last_trip_connection_made = connection_made
         last_trip_arrival_times = arrival_times
 
+        logging.debug("-----------------------------")
+
+
 
     # compute the reliability of the connection
     # first, compute the part where we check if we arrive at the destination at or before the time limit
@@ -372,7 +383,7 @@ def compute_reliability(
     probability_arrival_before_time_limit = compute_arrival_probability_last_trip(
         start_time, time_budget, last_trip_arrival_probabilities, last_trip_arrival_times
     )
-    logging.debug(f"Probability of arriving at the destination at or before the time limit: {probability_arrival_before_time_limit}")
+    #logging.debug(f"Probability of arriving at the destination at or before the time limit: {probability_arrival_before_time_limit}")
     # if the last trip connection made is -1, throw exception
     if last_trip_connection_made == -1:
         raise ValueError("No connection made for the last trip")

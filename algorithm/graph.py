@@ -10,8 +10,10 @@ from heapq import heapify, heappop, heappush
 
 from algorithm.helper import is_transfer_needed
 from algorithm.reliability_v2 import compute_reliability, TRANSFER_TIME_DEFAULT
+from constants import LOG_LEVEL
+
 # set log level
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=LOG_LEVEL)
 
 # Maybe this is redundant, and we want to use networkx instead!
 
@@ -68,7 +70,7 @@ class Graph:
         # for the source node, the distance is the start time
         earliest_arrival_times[source] = start_time
         # initialize our priority queue with the source node and the start time
-        priority_queue = [(start_time, source, None, [])]  # (arrival_time, node, train_identifier, actual_times), for the priority queue, a tuple is fine
+        priority_queue = [(start_time, source, 0, None, [])] # (arrival_time, node, time, train_identifier, actual_times), for the priority queue, a tuple is fine
         # parent dictionary to store the predecessors of each node (needed to reconstruct the path)
         predecessors = {node: None for node in self.graph}
 
@@ -79,7 +81,7 @@ class Graph:
         while priority_queue:
             # get the node with the earliest arrival time (highest priority)
             # current_time in a sense of cost
-            current_arrival, current_node, current_train_identifier, current_actual_times = heappop(priority_queue)
+            current_arrival, current_node, current_time, current_train_identifier, current_actual_times = heappop(priority_queue)
 
             # check if we have reached the destination (= target node)
             if current_node == target:
@@ -94,11 +96,17 @@ class Graph:
                 train_identifier = connection["trip_id"]
                 actual_times = connection["actual_times"]
                 # check if we can use the connection -> the departure time of the connection has to be greater than the current time
-                if departure_time >= current_arrival:
+                if departure_time >= current_time:
                     # if we are not in the same train (transfer needed)
+                    transfer_needed = is_transfer_needed(current_train_identifier, train_identifier)
+                    connection_made_condition = current_arrival + transfer_time <= departure_time if transfer_needed else current_arrival <= departure_time
                     # check if we can make the connection (meaning current arrival time + transfer time is smaller than the departure time of the connection)
-                    if is_transfer_needed(current_train_identifier, train_identifier) and current_arrival + transfer_time >= departure_time:
+                    if not connection_made_condition:
                         continue
+                    # calculate the travel time
+                    travel_time = arrival_time - departure_time
+                    # new current time (arrival time + travel time)
+                    new_current_time = current_arrival + travel_time
 
                     # check if the new arrival time is smaller than the existing arrival time to the neighbor
                     # only update if the new arrival time is smaller
@@ -106,7 +114,7 @@ class Graph:
                         # update the arrival time to the neighbor
                         earliest_arrival_times[neighbor] = arrival_time
                         # add the neighbor to the priority queue
-                        heappush(priority_queue, (arrival_time, neighbor, train_identifier, actual_times))
+                        heappush(priority_queue, (arrival_time, neighbor, new_current_time, train_identifier, actual_times))
                         # update the predecessor of the neighbor
                         predecessors[neighbor] = (departure_time, current_node, arrival_time, train_identifier, actual_times)
 
@@ -115,6 +123,7 @@ class Graph:
         current_node = target
         while current_node != source:
             # get info from the predecessor
+            print("Current node", current_node, "Predecessors: ", predecessors)
             departure_time, next_node, arrival_time, train_identifier, actual_times = predecessors[current_node]
             # to have the same structure as the graph, only one element in the list
             path.append({"from": next_node, "to": current_node, "planned_departure": departure_time, "planned_arrival": arrival_time, "trip_id": train_identifier,
