@@ -142,6 +142,7 @@ class Graph:
         @:param target: destination of the path
         @:param start_time: start time of considered trips, when we start the "journey"
         """
+        logging.info(f"Find most reliable path from {source} to {target} starting at {start_time} with a time budget of {time_budget} minutes")
         # Initialize most reliable path
         most_reliable_path = None
         # Initialize k (used as additional "tiebreaker" for the comparison of the heap queue)

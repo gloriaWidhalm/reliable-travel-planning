@@ -54,9 +54,9 @@ def get_paths(departure_station: str, arrival_station: str, departure_time: int)
     
     # Example mock data for demonstration:
     # shortest_time, shortest_path = G.dijkstra(departure_station, arrival_station, departure_time)
-    shortest_time, shortest_path_result  = G.dijkstra(departure_station, arrival_station, departure_time)
+    shortest_time, shortest_path_result  = G.dijkstra(departure_station, arrival_station, departure_time, transfer_time=5)
     
-    time_budget = (shortest_time - departure_time) * 1.7 # for the shortest path, we have 100% (and not more) of the time budget
+    time_budget = (shortest_time - departure_time) * 3 # for the shortest path, we have 100% (and not more) of the time budget
     
     
     shortest_path = _map_path_to_tuples(shortest_path_result)
@@ -64,7 +64,9 @@ def get_paths(departure_station: str, arrival_station: str, departure_time: int)
     
     
 
-    _, reliability, most_reliable_path_result = G.find_most_reliable_path(departure_station, arrival_station, departure_time, int(time_budget))
+    arrival_time, reliability, most_reliable_path_result = G.find_most_reliable_path(departure_station, arrival_station, departure_time, int(time_budget))
+    print("Arrival time: ", arrival_time)
+    print("most reliable path result ", most_reliable_path_result)
     
     most_reliable_path = _map_path_to_tuples(most_reliable_path_result)
     most_reliable_path_reliability = reliability
@@ -83,7 +85,7 @@ def get_paths(departure_station: str, arrival_station: str, departure_time: int)
     )
 
 def _map_path_to_tuples(path: list) -> list:
-    return [(x["from"], x["to"], _convert_minutes_to_time(x["planned_departure"]), _convert_minutes_to_time(x["planned_arrival"])) for x in path]
+    return [(f"{x['trip_id']} {x['from']}", x["to"], _convert_minutes_to_time(x["planned_departure"]), _convert_minutes_to_time(x["planned_arrival"])) for x in path]
 
 def _convert_time_to_minutes(time: str) -> int:
     hours, minutes = map(int, time.split(":"))
@@ -111,6 +113,9 @@ def index():
          most_reliable_path, most_reliable_path_reliability, difference) = get_paths(
             departure_station, arrival_station, departure_time_minutes
         )
+
+        print("most_reliable_path: ", most_reliable_path)
+        print("shortest_path: ", shortest_path)
 
         return render_template(
             "results.html",

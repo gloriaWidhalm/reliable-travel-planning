@@ -3,10 +3,6 @@ from algorithm.graph import Graph
 from algorithm.helper import print_path
 from algorithm.reliability_v2 import compute_reliability
 
-
-
-
-
 # Data structure (tuples sorted by departure time for faster access)
 # We have a dictionary with the nodes as keys and the values are an array with tuples (departure_time, neighbor, arrival_time, trip identifier)
 # times in minutes
