@@ -26,14 +26,14 @@ def find_shortest_and_most_reliable_path(start, destination, start_time, time_bu
     start = get_specific_station_identifier_from_name(stop_name=start)
     destination = get_specific_station_identifier_from_name(stop_name=destination)
 
-    # parse to string
-    start = str(start)
-    destination = str(destination)
+    # parse to number
+    start = int(start)
+    destination = int(destination)
 
     logging.info(f"Loading graph data for {start} to {destination}")
 
     # set end time artificially (currently only support 3-6 hours, so set it to 5 hours)
-    end_time = start_time + 300
+    end_time = start_time + 180
     # get data
     graph = get_graph_data("2024-10-02", "../transport_data.db", start_time, end_time, start, use_example_data=False)
     logging.info("Graph data loaded")
@@ -44,10 +44,10 @@ def find_shortest_and_most_reliable_path(start, destination, start_time, time_bu
     print("Graph: ")
     print(G.graph)
     # if the graph is empty, return
-    if not G.graph or len(G.graph.values() == 0):
+    if not G.graph:
         logging.info("Graph is empty")
         return
-
+    return
     shortest_time, shortest_path = G.dijkstra(start, destination, start_time)
     time_budget_shortest_path = (shortest_time - start_time) * 1  # for the shortest path, we have 100% (and not more) of the time budget
     shortest_path_reliability = compute_reliability(shortest_path, start_time, time_budget_shortest_path, transfer_time=5)
@@ -97,7 +97,7 @@ def get_specific_station_name_from_identifier(db_connection=None, stop_id=None):
 
 
 if __name__ == "__main__":
-    start_time = 600  # 0 minutes, please set this to what you need
+    start_time = 600  # 10 AM, please set this to what you need
 
     # you need to enter stations with their identifier, names are not supported
     # here are some examples, under "OPUIC" you can find the station identifier: https://data.sbb.ch/explore/dataset/stadtefahrplan/table/ (please without commas)
@@ -108,9 +108,11 @@ if __name__ == "__main__":
 
     #desired_stop_id = 8507000
     #desired_stop_name = "Bern"
-    #stop = get_specific_station_identifier_from_name(stop_name=desired_stop_name)
-    #stop_name = get_specific_station_name_from_identifier(stop_id=desired_stop_id)
+    stop = get_specific_station_identifier_from_name(stop_name="Zürich HB")
+    print(stop)
+    stop_name = get_specific_station_name_from_identifier(stop_id="8501000")
+    print("stop_name", stop_name)
 
     result = find_shortest_and_most_reliable_path(start, destination, start_time)
-    print(result)
+    #print(result)
 

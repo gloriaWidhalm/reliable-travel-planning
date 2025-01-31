@@ -1,8 +1,11 @@
 # This file contains code to run the simple Dijsktra pathfinder
+import logging
+
 from algorithm.graph import Graph
-from algorithm.Network import get_data  # Import function to get data from database
-from algorithm.Network import process_route_data  # Import function to generate graph dynamically
+from retrieve_data.Network import get_data  # Import function to get data from database
+from retrieve_data.Network import process_route_data  # Import function to generate graph dynamically
 from algorithm.reliability_v2 import compute_reliability
+
 
 
 def print_path(path, start_node, start_time=0):
@@ -79,8 +82,8 @@ if __name__ == "__main__":
     start_time = 540 #9AM, 10 AM, 11 AM
     end_time= start_time + 180
     start_stop = 8501003 #Sissach
-    start = "Sissach" #Departure Station
-    destination = "Zürich HB" #Arrival Station
+    start = 8501003 #Departure Station
+    destination = 8501000 #Arrival Station, Zimeysa
     graph_data = generate_graph(start_time, end_time, start_stop)
 
     G = Graph(graph=graph_data)
@@ -95,12 +98,12 @@ if __name__ == "__main__":
         print("Shortest path:", shortest_path)
         # evaluate reliability of the path
         time_budget = (shortest_time - start_time) * 1.5
-        shortest_path_reliability = compute_reliability(shortest_path, start_time, time_budget, transfer_time=5)
+        shortest_path_reliability = compute_reliability(shortest_path, start_time, int(time_budget), transfer_time=5)
         #compute the reliability of the path
         print(f"Reliability of the shortest path: ~{round(shortest_path_reliability * 100)}%")
 
-    # Test finding the most reliable path
-    reliable_arrival_time, reliability, most_reliable_path = G.find_most_reliable_path(start, destination, start_time, int(time_budget))
-    print("We go from", start, "to", destination, "starting at", start_time, "with a time budget of", time_budget, "earliest possible arrival", shortest_time, "latest possible arrival", start_time + time_budget)
-    print("Reliability:", reliability, "arrival time with most reliable path", reliable_arrival_time)
-    print_path(most_reliable_path, start, start_time)
+        # Test finding the most reliable path
+        reliable_arrival_time, reliability, most_reliable_path = G.find_most_reliable_path(start, destination, start_time, int(time_budget))
+        print("We go from", start, "to", destination, "starting at", start_time, "with a time budget of", time_budget, "earliest possible arrival", shortest_time, "latest possible arrival", start_time + time_budget)
+        print("Reliability:", reliability, "arrival time with most reliable path", reliable_arrival_time)
+        print_path(most_reliable_path, start, start_time)

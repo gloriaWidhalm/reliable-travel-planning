@@ -8,7 +8,8 @@ from constants import LOG_LEVEL
 TRANSFER_TIME_DEFAULT = 5
 # set log level
 logging.basicConfig(level=LOG_LEVEL)
-
+# Improvement idea regarding efficiency: using lru_cache to store the results of the function (would need to use tuples instead of lists)
+# This library could be a good idea: https://github.com/lonelyenvoy/python-memoization (allows unhashable types like lists)
 
 def compute_probability(time: int, time_distribution: List[int]) -> float:
     """
@@ -133,6 +134,7 @@ def compute_connection_probability(
     return probability
 
 
+
 def compute_probability_to_arrive_at_t_given_connection_made(
         arrival_time: int,
         departure_probabilities: List,
@@ -224,6 +226,7 @@ def compute_reliability(
     station_trips because it is a dictionary with the station as key and the trips from this station as values
     """
     logging.debug(f"#########################################")
+    logging.debug(f"Compute reliability, complete path: {complete_path}")
     logging.debug(f"Compute reliability for station trips: {station_trips}")
     # First, add the departure probabilities to the trips
     # create a deep copy of the station trips to avoid modifying the original data
@@ -266,11 +269,16 @@ def compute_reliability(
     #logging.debug(f"Second trip: {second_trip}")
     # all the trips from the third trip onwards until the last trip
     trips_from_third_trip = station_trips_copy[2:]
+
+    # list of all probabilities of making the connections
+    probabilities_connections_made = []
+
     # compute the probability of making the first connection (between the first and second trip)
     # check if a transfer is needed between the first and second trip
     transfer_needed_first_second_trip = is_transfer_needed(
         first_trip["trip_id"] if "trip_id" in first_trip else "", second_trip["trip_id"] if "trip_id" in second_trip else ""
     )
+
     connection_made_first_second_trip = compute_connection_probability(
         second_trip["departure_probabilities"],
         arrival_probabilities_first_trip,
@@ -278,6 +286,8 @@ def compute_reliability(
         transfer_needed_first_second_trip,
         transfer_time,
     )
+    # store the probability of making the connection (for the reliability computation, last step)
+    probabilities_connections_made.append(connection_made_first_second_trip)
     # compute arrival probabilities for second trip given that we made the connection (between the first and second trip)
     arrival_times_second_trip = get_arrival_times_from_trip(second_trip)
     arrival_probabilities_second_trip = []
@@ -314,7 +324,6 @@ def compute_reliability(
 
     # prepare the data for the reliability computation
     last_trip_arrival_probabilities = []  # arrival probabilities
-    last_trip_connection_made = -1  # initialize with 1, if we have no connection, the probability is 1
     last_trip_arrival_times = []  # arrival times
 
     # compute the rest of the connections (from the third trip onwards), connection probability and arrival probabilities given that we made the connection
@@ -328,7 +337,6 @@ def compute_reliability(
             previous_trip = second_trip
             arrival_probabilities_previous_trip = arrival_probabilities_second_trip
             arrival_times_previous_trip = arrival_times_second_trip
-            connection_made_previous_trip = connection_made_first_second_trip
             is_third_trip = False
 
         transfer_needed = is_transfer_needed(previous_trip["trip_id"] if "trip_id" in previous_trip else "", current_trip["trip_id"] if "trip_id" in current_trip else "")
@@ -343,6 +351,9 @@ def compute_reliability(
             transfer_needed,
             transfer_time,
         )
+        # store the probability of making the connection (for the reliability computation, last step)
+        probabilities_connections_made.append(connection_made)
+        logging.debug(f"### Connection made: {connection_made} for trip {current_trip}, with arrival probabilities {arrival_probabilities_previous_trip} and arrival times {arrival_times_previous_trip}")
 
         # compute arrival probabilities for the current trip given that we made the connection (between the previous and current trip)
         for arrival_time in arrival_times:
@@ -365,14 +376,11 @@ def compute_reliability(
         previous_trip = current_trip
         arrival_probabilities_previous_trip = arrival_probabilities
         arrival_times_previous_trip = arrival_times
-        connection_made_previous_trip = connection_made
 
         # store the arrival probabilities of the last trip and the connection probability for the final reliability computation
         last_trip_arrival_probabilities = arrival_probabilities
-        last_trip_connection_made = connection_made
         last_trip_arrival_times = arrival_times
 
-        logging.debug("-----------------------------")
 
 
 
@@ -384,15 +392,19 @@ def compute_reliability(
         start_time, time_budget, last_trip_arrival_probabilities, last_trip_arrival_times
     )
     #logging.debug(f"Probability of arriving at the destination at or before the time limit: {probability_arrival_before_time_limit}")
-    # if the last trip connection made is -1, throw exception
-    if last_trip_connection_made == -1:
-        raise ValueError("No connection made for the last trip")
+
+    # product of probabilities of all connections made
+    product_probabilities_connections_made = 1
+    for probability_connection_made in probabilities_connections_made:
+        product_probabilities_connections_made *= probability_connection_made
+    logging.debug(f"** Probabilities of all connections made: {probabilities_connections_made}")
 
     # If we want to know the reliability of a partial path (not complete), then we return the probabilities separately
     if not complete_path:
-        return probability_arrival_before_time_limit, last_trip_connection_made
+        logging.debug(f"Prob. of arrival before time limit: {probability_arrival_before_time_limit}, Prob. of all connections made: {product_probabilities_connections_made}")
+        return probability_arrival_before_time_limit, product_probabilities_connections_made
 
-    reliability = probability_arrival_before_time_limit * last_trip_connection_made
+    reliability = probability_arrival_before_time_limit * product_probabilities_connections_made
     return reliability
 
 

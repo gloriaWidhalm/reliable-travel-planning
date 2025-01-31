@@ -1,24 +1,10 @@
 # This file contains code to run the simple Dijsktra pathfinder -> with the pen and paper example, with reliability evaluation
 from algorithm.graph import Graph
+from algorithm.helper import print_path
 from algorithm.reliability_v2 import compute_reliability
 
 
-def print_path(path, start_node, start_time=0):
-    """
-    Print the path in a human-readable way
-    :param path: tuple with the path (departure_time, node, arrival_time, identifier)
-    """
-    # The first edge is the source node
-    if path is None:
-        print("No path found")
-        return
-    print(f"Start at {start_node} at {start_time}")
-    for trip in path:
-        departure_time = trip["planned_departure"]
-        arrival_time = trip["planned_arrival"]
-        node = trip["to"]
-        identifier = trip["trip_id"]
-        print(f"Take {identifier} to {node} at {departure_time} and arrive at {arrival_time}")
+
 
 
 # Data structure (tuples sorted by departure time for faster access)

@@ -9,6 +9,7 @@ from copy import deepcopy
 from heapq import heapify, heappop, heappush
 
 from algorithm.helper import is_transfer_needed
+from algorithm.helper import print_path
 from algorithm.reliability_v2 import compute_reliability, TRANSFER_TIME_DEFAULT
 from constants import LOG_LEVEL
 
@@ -169,8 +170,6 @@ class Graph:
             possible_connections = self.graph[last_station]  # possible connections = adjacent edges
             # go through all adjacent edges to "build"/extend our path towards our target/destination further
             for connection in possible_connections:
-                if connection["from"] == "Spiez" and connection["to"] == "Visp" and connection["planned_arrival"] == 602 and connection["planned_departure"] == 576:
-                    print("Spiez-Visp")
                 extended_trips = deepcopy(path_highest_reliability[position_of_trips])  # the trips in the tuple
                 extended_trips.append(connection)
                 probability_arrival, probability_connection_made = compute_reliability(extended_trips, start_time, time_budget, complete_path=False, transfer_time=transfer_time)
@@ -195,10 +194,12 @@ class Graph:
                     if most_reliable_path is None or reliability_path > most_reliable_path[0]:
                         logging.debug(f"New most reliable path: {new_most_reliable_path}")
                         most_reliable_path = new_most_reliable_path
+                        print(f"+++Most reliable path: reliability: {most_reliable_path[0]}, probability arrival: {probability_arrival}, probability connection made: {probability_connection_made}, label {k}")
+                        print_path(most_reliable_path[position_of_trips][1:], source, start_time)
                 else:
                     # add the extended path to the priority queue
                     heappush(priority_queue, extended_path)
-        logging.debug(f"Most reliable path: {most_reliable_path}")
+
         reliability = most_reliable_path[0]
         # check if the reliability is 0 (no reliable path found)
         if reliability == 0:

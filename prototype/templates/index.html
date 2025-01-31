@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Train Journey Planner</title>
+    <!-- Include Bootstrap CSS (via CDN for simplicity) -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            padding: 2rem;
+        }
+
+        .form-container {
+            max-width: 500px;
+            margin: 0 auto;
+            margin-top: 3rem;
+            background: #f7f7f7;
+            padding: 2rem;
+            border-radius: 8px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="form-container">
+            <h1>Train Journey Planner</h1>
+            <form method="POST" action="/">
+                <div class="form-group">
+                    <label for="departure_station">Departure Station:</label>
+                    <select class="form-control" id="departure_station" name="departure_station" required>
+                        <option value="" disabled selected>Select your departure station</option>
+                        {% for station in stations %}
+                        <option value="{{ station }}">{{ station }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="arrival_station">Arrival Station:</label>
+                    <select class="form-control" id="arrival_station" name="arrival_station" required>
+                        <option value="" disabled selected>Select your arrival station</option>
+                        {% for station in stations %}
+                        <option value="{{ station }}">{{ station }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="departure_time">Departure Time:</label>
+                    <input type="time" class="form-control" id="departure_time" name="departure_time" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">Find Paths</button>
+            </form>
+        </div>
+    </div>
+
+</body>
+
+</html>
