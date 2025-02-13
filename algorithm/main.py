@@ -1,4 +1,6 @@
 # This file contains code to run the simple Dijsktra pathfinder -> with the pen and paper example, with reliability evaluation
+import time
+
 from algorithm.graph import Graph
 from algorithm.helper import print_path
 from algorithm.reliability_v2 import compute_reliability
@@ -53,7 +55,7 @@ if __name__ == "__main__":
     # Example: shortest path from Bern to Brig
     start_time = 400
     start = "Bern"
-    destination = "Visp"
+    destination = "Brig"
     shortest_time, shortest_path = G.dijkstra(start, destination, start_time)
     # print(f"Earliest arrival time from Bern to Brig is {shortest_time}")
     # print_path(shortest_path, "Bern", 400)
@@ -64,10 +66,15 @@ if __name__ == "__main__":
     time_budget = (shortest_time - start_time) * 1.7 # for the shortest path, we have 100% (and not more) of the time budget
     # # compute the reliability of the path
     shortest_path_reliability = compute_reliability(shortest_path, start_time, (shortest_time - start_time) * 1, transfer_time=5)
+    print_path(shortest_path, start, start_time)
     print(f"Reliability of the shortest path: {round(shortest_path_reliability*100, 2)}%")
 
     # Test finding the most reliable path
+    run_time_start = time.time()
     reliable_arrival_time, reliability, most_reliable_path = G.find_most_reliable_path(start, destination, start_time, int(time_budget))
+    run_time_end = time.time()
+    runtime = run_time_end - run_time_start
+    print(f"Runtime for finding the most reliable path: {runtime} seconds")
     print("We go from", start, "to", destination, "starting at", start_time, "with a time budget of", time_budget, "earliest possible arrival", shortest_time, "latest possible arrival", start_time + time_budget)
     print("Reliability:", f"{round(reliability*100, 2)}%", "arrival time with most reliable path", reliable_arrival_time)
     print_path(most_reliable_path, start, start_time)

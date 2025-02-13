@@ -1,10 +1,12 @@
 # This file contains functions that are used in multiple files, and it is more convenient to have them in a separate file.
 import logging
 
+import duckdb
+
 from constants import LOG_LEVEL
+from retrieve_data.Network_wcancelled import get_data, process_route_data
 
 logging.basicConfig(level=LOG_LEVEL)
-from retrieve_data.Network import get_data, process_route_data
 
 
 def is_transfer_needed(trip_identifier_1: str | None, trip_identifier_2: str | None) -> bool:
@@ -13,9 +15,7 @@ def is_transfer_needed(trip_identifier_1: str | None, trip_identifier_2: str | N
     Otherwise, we assume we are in the same train and no transfer is needed.
     """
     # check if the trip identifiers are different
-    if trip_identifier_1 and trip_identifier_2 and trip_identifier_1 != trip_identifier_2:
-        return True
-    return False
+    return trip_identifier_1 and trip_identifier_2 and trip_identifier_1 != trip_identifier_2
 
 def get_graph_data(desired_date, data_path, start_time, end_time, start_station, use_example_data=False):
     """
@@ -68,13 +68,13 @@ def get_graph_data(desired_date, data_path, start_time, end_time, start_station,
     # if the transport_data.db is in a different location, you can specify the path here
     # Also, here you can specify the date of interest
     #train_data = get_data(desired_date, database_path=data_path)
-    train_data = get_data()
+    train_data = get_data(database_path=data_path)
     logging.info(f"Data loaded for {desired_date} {train_data.head()}")
 
     # get graph structure from train data
     return process_route_data(train_data, start_time, end_time, start_station)
 
-def print_path(path, start_node, start_time=0):
+def print_path(path, start_node, start_time=0, convert_ids_to_names=False):
     """
     Print the path in a human-readable way
     :param path: tuple with the path (departure_time, node, arrival_time, identifier)
@@ -83,10 +83,134 @@ def print_path(path, start_node, start_time=0):
     if path is None:
         print("No path found")
         return
+    if convert_ids_to_names:
+        start_station = get_specific_station_name_from_identifier(stop_id=start_node)
+        start_node = start_station
     print(f"Start at {start_node} at {start_time}")
     for trip in path:
         departure_time = trip["planned_departure"]
         arrival_time = trip["planned_arrival"]
         node = trip["to"]
+        if convert_ids_to_names:
+            node = get_specific_station_name_from_identifier(stop_id=node)
         identifier = trip["trip_id"]
+        if convert_ids_to_names:
+            identifier = get_specific_trip_identifier_from_identifier(trip_id=identifier)
         print(f"Take {identifier} to {node} at {departure_time} and arrive at {arrival_time}")
+
+
+
+
+def consolidate_path(path_lst: list[dict]) -> list[dict]:
+    """
+    Consolidate a list of paths into a single path.
+    :param path_lst: list of paths
+
+    :return: consolidated path
+    """
+    consolidated_path = []
+
+    # dictionary stores:
+    # from, to, actual_times, planned departure, planned arrival, trip_id
+    if len(path_lst) in (0, 1):
+        return path_lst
+    current_trip = path_lst[0]
+
+    def _construct_payload(current_trip, next_trip):
+        actual_times = merge_actual_times(current_trip["actual_times"], next_trip["actual_times"])
+
+        return {
+            "from": current_trip["from"],
+            "to": next_trip["to"],
+            "planned_departure": current_trip["planned_departure"],
+            "planned_arrival": next_trip["planned_arrival"],
+            "trip_id": current_trip["trip_id"],
+            "actual_times": actual_times
+        }
+
+
+    # Iterate to the last trip_id
+    for i in range(1, len(path_lst)):
+        if current_trip["trip_id"] != path_lst[i]["trip_id"]:
+            j = i - 1
+
+            # Construct the consolidated payload with the previous trip
+            payload = _construct_payload(current_trip, path_lst[j])
+
+            # Append it the final list
+            consolidated_path.append(payload)
+
+            # Set the current iteration to the current trip
+            current_trip = path_lst[i]
+
+    # Edge case => we do not change the trip at all / need to consolidate the last entry as well
+    if current_trip["trip_id"] == path_lst[-1]["trip_id"]:
+        payload = _construct_payload(current_trip, path_lst[-1])
+        consolidated_path.append(payload)
+
+    return consolidated_path
+
+def merge_actual_times(actual_times_first_trip, actual_times_second_trip):
+    """
+    Merge the actual times from the last trip and the current connection
+    Note: This is a simplification, we could use a more advanced (or should in a realistic condition) to properly match the actual times
+    Because it could potentially be that we have a different number of actual time observations/historical departure and arrival times
+    """
+
+    # get actual times from last trip and current connection, using the departure times from the last trip and the arrival times from the current connection
+    actual_times = []
+    # Note: this is a simplification (for matching the actual times)
+    # get number of historic departure times from the last trip
+    number_actual_times_last_trip = len(actual_times_first_trip)
+    # get number of historic arrival times from the current connection
+    number_actual_times_current_connection = len(actual_times_second_trip)
+    # take the minimum of the two
+    number_actual_times = min(number_actual_times_last_trip, number_actual_times_current_connection)
+    # now combine the actual times (departure from last trip and arrival from current connection), assuming the order is correct
+    for i in range(number_actual_times):
+        # add the actual times to the list, this is a simplification
+        # (we could do a more sophisticated approach to check for the actual times and also to match them)
+        actual_times.append((actual_times_first_trip[i][0], actual_times_second_trip[i][1]))
+    return actual_times
+
+
+def get_specific_station_identifier_from_name(db_connection=None, stop_name=None):
+    if not db_connection:
+        connection = duckdb.connect("../transport_data.db", read_only=True)
+    else:
+        connection = db_connection
+    if stop_name:
+        query = f'''SELECT BPUIC FROM services WHERE STOP_NAME LIKE '%{stop_name}%' limit 1 '''
+    # optionally, we could
+    #elif stop_id:
+        #query = f'''SELECT STOP_NAME FROM services WHERE BPUIC = '{stop_id}' limit 1'''
+    df = connection.execute(query).df()
+    if df.empty or "BPUIC" not in df.columns:
+        return stop_name
+    return df['BPUIC'][0]
+
+def get_specific_station_name_from_identifier(db_connection=None, stop_id=None):
+    if not db_connection:
+        connection = duckdb.connect("../transport_data.db", read_only=True)
+    else:
+        connection = db_connection
+    if stop_id:
+        query = f'''SELECT STOP_NAME FROM services WHERE BPUIC = '{stop_id}' limit 1'''
+    df = connection.execute(query).df()
+
+    if df.empty or "STOP_NAME" not in df.columns:
+        return stop_id
+    return df['STOP_NAME'][0]
+
+def get_specific_trip_identifier_from_identifier(db_connection=None, trip_id=None):
+    if not db_connection:
+        connection = duckdb.connect("../transport_data.db", read_only=True)
+    else:
+        connection = db_connection
+    if trip_id:
+        query = f'''SELECT LINE_TEXT FROM services WHERE TRIP_IDENTIFIER = '{trip_id}' limit 1'''
+    df = connection.execute(query).df()
+
+    if df.empty or "LINE_TEXT" not in df.columns:
+        return trip_id # return the original trip id if the query did not return anything
+    return df['LINE_TEXT'][0]

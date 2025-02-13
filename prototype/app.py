@@ -55,7 +55,8 @@ def get_paths(departure_station: str, arrival_station: str, departure_time: int)
     # Example mock data for demonstration:
     # shortest_time, shortest_path = G.dijkstra(departure_station, arrival_station, departure_time)
     shortest_time, shortest_path_result  = G.dijkstra(departure_station, arrival_station, departure_time, transfer_time=5)
-    
+
+    # @todo - for simplicity, very high time budget is used
     time_budget = (shortest_time - departure_time) * 3 # for the shortest path, we have 100% (and not more) of the time budget
     
     
