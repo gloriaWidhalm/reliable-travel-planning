@@ -12,7 +12,7 @@ from collections import defaultdict
 from collections import defaultdict
 import json
 
-def get_data(date='2024-10-01', database_path='transport_data.db'):
+def get_data(date='2024-10-02', database_path='transport_data.db'):
 
     # Connect to the database
     connection = duckdb.connect(database_path, read_only=False)
@@ -204,7 +204,7 @@ def process_route_data(result_df, start_time=700, end_time=880, start_stop=85030
                 predictions.append((int(departure), int(arrival)))
         return predictions if predictions else None
     
-    def build_line_path(stop, arrival_time, trip_identifier, prev_departure=None):
+    def build_line_path(stop, arrival_time, trip_identifier, line_text, prev_departure=None):
         """Recursively build path through the network for a given line
         
         Processes both direct connections (next stops on the same line)
@@ -252,19 +252,23 @@ def process_route_data(result_df, start_time=700, end_time=880, start_stop=85030
                     "planned_departure": current_departure,
                     "to": next_stop,
                     "planned_arrival": next_arrival,
-                    "trip_id": trip_identifier,
+                    # as a simplification, we use the line text instead of the trip identifier
+                    # this is because we saw that the trip identifier sometimes changed though it was still the same train/line
+                    "trip_id": line_text,
+                    "trip_identifier_long": trip_identifier,
                     "actual_times": predictions
                 }
                 
                 if transition not in graph[stop]:
                     graph[stop].append(transition)
-                    build_line_path(next_stop, next_arrival, trip_identifier, current_departure)
+                    build_line_path(next_stop, next_arrival, trip_identifier, line_text, current_departure)
 
         # Process transfers at current station
         for _, transfer in transfers.iterrows():
             new_trip_identifier = transfer['TRIP_IDENTIFIER']
             new_arrival = int(transfer['PLANNED_ARRIVAL'])
             new_departure = int(transfer['PLANNED_DEPARTURE'])
+            new_line_text = transfer['LINE_TEXT']
             
             predictions = get_predictions_for_transition(transfer, transfer)
             
@@ -274,13 +278,14 @@ def process_route_data(result_df, start_time=700, end_time=880, start_stop=85030
                     "planned_departure": new_departure,
                     "to": stop,
                     "planned_arrival": new_arrival,
-                    "trip_id": new_trip_identifier,
+                    "trip_id": new_line_text,
+                    "trip_identifier_long": new_trip_identifier,
                     "actual_times": predictions
                 }
                 
                 if transition not in graph[stop]:
                     graph[stop].append(transition)
-                    build_line_path(stop, new_arrival, new_trip_identifier)
+                    build_line_path(stop, new_arrival, new_trip_identifier, new_line_text)
 
     # Find and process initial routes from the start station
     initial_routes = data[
@@ -293,8 +298,9 @@ def process_route_data(result_df, start_time=700, end_time=880, start_stop=85030
         initial_route = initial_routes.iloc[0]
         initial_trip_identifier = initial_route['TRIP_IDENTIFIER']
         initial_arrival = int(initial_route['PLANNED_ARRIVAL'])
+        initial_line_text = initial_route['LINE_TEXT']
         
-        build_line_path(start_stop, initial_arrival, initial_trip_identifier)
+        build_line_path(start_stop, initial_arrival, initial_trip_identifier, initial_line_text)
     
     # Clean up the graph by removing self-transitions
     for stop in graph:

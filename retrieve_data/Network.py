@@ -12,7 +12,7 @@ from collections import defaultdict
 from collections import defaultdict
 import json
 
-def get_data(date='2024-10-01', database_path='transport_data.db'):
+def get_data(date='2024-10-02', database_path='../transport_data.db'):
     """Process transport data for a given date"""
     # Connect to the database
     logging.info(f"Getting data for date {date}, from database {database_path}")
@@ -99,7 +99,7 @@ def process_route_data(result_df, start_time=700, end_time=880, start_stop=85030
     dict: Generated route graph
     """
     logging.info(f"Processing route data")
-    logging.debug(f"Start time: {start_time}, End time: {end_time}, Start stop: {start_stop}")
+    logging.info(f"Start time: {start_time}, End time: {end_time}, Start stop: {start_stop}")
     #logging.debug(f"Data: {result_df}")
     from collections import defaultdict
     import json
