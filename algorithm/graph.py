@@ -186,18 +186,17 @@ class Graph:
                 logging.debug(f"No connections for this station {last_station}")
                 continue
 
-            # prepare the extended path (add the connection to the path)
-            extended_trips = deepcopy(path_highest_reliability[position_of_trips])  # the trips in the tuple
-            # simplification: if the number of trips is more than 4, we skip all possible connections from here (we have already reached the maximum number of trips)
-            # This is a simplification to speed up the process, we assume that no one would transfer more than 3 times
-            # @todo adjust again and add again to code
-            # if len(extended_trips) > 7:
-            #     logging.debug("More than 7 trips, skipping all possible connections from here")
-            #     continue
-
             possible_connections = self.graph[last_station] # possible connections = adjacent edges
             # go through all adjacent edges to "build"/extend our path towards our target/destination further
             for connection in possible_connections:
+                # prepare the extended path (add the connection to the path)
+                extended_trips = deepcopy(path_highest_reliability[position_of_trips])  # the trips in the tuple
+                # simplification: if the number of trips is more than 4, we skip all possible connections from here (we have already reached the maximum number of trips)
+                # This is a simplification to speed up the process, we assume that no one would transfer more than 3 times
+                # @todo adjust again and add again to code
+                if len(extended_trips) > 4:
+                    logging.debug("More than 4 trips, skipping all possible connections from here")
+                    continue
                 # check if the planned departure time of the connection is greater than the planned arrival time of the last trip
                 if "planned_arrival" in last_trip and connection["planned_departure"] < last_trip["planned_arrival"]:
                     #logging.debug(f"Connection is before arrival of last trip {last_trip}, connection: {connection}")
