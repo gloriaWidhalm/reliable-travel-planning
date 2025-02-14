@@ -59,7 +59,7 @@ def get_all_arrival_probabilities_trip(
     ]
     # only use unique arrival probabilities
     arrival_probabilities = list(set(arrival_probabilities))
-    logging.debug(f"Arrival probabilities first trip: {arrival_probabilities}, Arrival times first trip: {arrival_times}")
+    #logging.debug(f"Arrival probabilities first trip: {arrival_probabilities}, Arrival times first trip: {arrival_times}")
     return arrival_probabilities
 
 
@@ -95,7 +95,7 @@ def compute_probability_to_arrive_at_or_before(
         for arrival_time in arrival_probabilities
         if arrival_time[0] <= max_arrival_time
     ]
-    logging.debug(f"Arrival probabilities: {probabilities}, arrival times: {arrival_times}, compute_probability_to_arrive_at_or_before")
+    #logging.debug(f"Arrival probabilities: {probabilities}, arrival times: {arrival_times}, compute_probability_to_arrive_at_or_before")
     # sum the probabilities
     probability = sum(probabilities)
     return probability
@@ -126,8 +126,6 @@ def compute_connection_probability(
             time_limit, arrival_probabilities, arrival_times
         )
         probabilities.append(departure_probabilities[i][1] * arrival_probability)
-        logging.debug(f"Departure time: {departure_probabilities[i][0]}, departure probabilities {departure_probabilities[i][1]} Arrival probability: {arrival_probability}, arrival times: {arrival_times}")
-        logging.debug(f"**Probabilities for connection made: {probabilities}, sum: {sum(probabilities)}")
     # sum the probabilities
     probability = sum(probabilities)
     # return the probability of a connection made
@@ -177,11 +175,11 @@ def compute_probability_to_arrive_at_t_given_connection_made(
             time_limit, arrival_probabilities, arrival_times
         )
 
-        logging.debug(f"Departure time: {t_dep[0]}, Arrival time: {arrival_time}")
-        logging.debug(f"Departure probability: {probability_departure}")
-        logging.debug(f"Arrival probability before t': {probability_arrival_before_t_prime}")
-        logging.debug(f"Arrival probability given departure: {probability_arrival_given_departure}")
-        logging.debug(f"Probability connection made: {probability_connection_made}")
+        # logging.debug(f"Departure time: {t_dep[0]}, Arrival time: {arrival_time}")
+        # logging.debug(f"Departure probability: {probability_departure}")
+        # logging.debug(f"Arrival probability before t': {probability_arrival_before_t_prime}")
+        # logging.debug(f"Arrival probability given departure: {probability_arrival_given_departure}")
+        # logging.debug(f"Probability connection made: {probability_connection_made}")
 
         # check if the probability of connection made is 0, if yes, we return 0
         if probability_connection_made == 0:
@@ -193,7 +191,7 @@ def compute_probability_to_arrive_at_t_given_connection_made(
                               * probability_arrival_given_departure
                       ) / probability_connection_made
 
-        logging.debug(f"Probability of arriving at time {arrival_time} given that we made the connection: {probability}")
+        #logging.debug(f"Probability of arriving at time {arrival_time} given that we made the connection: {probability}")
 
         # sum later over all departure times
         probabilities.append(probability)
@@ -225,9 +223,9 @@ def compute_reliability(
     Compute the reliability of a connection given a list of trips and a start time and time budget
     station_trips because it is a dictionary with the station as key and the trips from this station as values
     """
-    logging.debug(f"#########################################")
-    logging.debug(f"Compute reliability, complete path: {complete_path}")
-    logging.debug(f"Compute reliability for station trips: {station_trips}")
+    #logging.debug(f"#########################################")
+    #logging.debug(f"Compute reliability, complete path: {complete_path}")
+    #logging.debug(f"Compute reliability for station trips: {station_trips}")
     # First, add the departure probabilities to the trips
     # create a deep copy of the station trips to avoid modifying the original data
     station_trips_copy = deepcopy(station_trips)
@@ -263,7 +261,7 @@ def compute_reliability(
         return compute_arrival_probability_last_trip(
             start_time, time_budget, arrival_probabilities_first_trip, arrival_times_first_trip
         )
-    logging.debug("-----------------------------")
+    #logging.debug("-----------------------------")
     # extract the second trip from the station trips (also handled a bit differently)
     second_trip = station_trips_copy[1]
     #logging.debug(f"Second trip: {second_trip}")
@@ -318,7 +316,7 @@ def compute_reliability(
             return probability_arrival_before_time_limit, connection_made_first_second_trip
         return probability_arrival_before_time_limit * connection_made_first_second_trip
 
-    logging.debug("-----------------------------")
+    #logging.debug("-----------------------------")
 
     is_third_trip = True  # different handling for the third trip
 
@@ -332,7 +330,6 @@ def compute_reliability(
     # then, we prepare the data for the next trip (iteration)
     # we repeat this for all trips after the second trip
     for current_trip in trips_from_third_trip:
-        #logging.debug(f"Current trip: {current_trip}")
         if is_third_trip:
             previous_trip = second_trip
             arrival_probabilities_previous_trip = arrival_probabilities_second_trip
@@ -353,7 +350,7 @@ def compute_reliability(
         )
         # store the probability of making the connection (for the reliability computation, last step)
         probabilities_connections_made.append(connection_made)
-        logging.debug(f"### Connection made: {connection_made} for trip {current_trip}, with arrival probabilities {arrival_probabilities_previous_trip} and arrival times {arrival_times_previous_trip}")
+        #logging.debug(f"### Connection made: {connection_made} for trip {current_trip}, with arrival probabilities {arrival_probabilities_previous_trip} and arrival times {arrival_times_previous_trip}")
 
         # compute arrival probabilities for the current trip given that we made the connection (between the previous and current trip)
         for arrival_time in arrival_times:
@@ -370,7 +367,7 @@ def compute_reliability(
             arrival_probabilities.append((arrival_time, probability))
         # only use unique arrival probabilities
         arrival_probabilities = list(set(arrival_probabilities))
-        logging.debug(f"### Arrival probabilities in loop {arrival_probabilities}")
+        #logging.debug(f"### Arrival probabilities in loop {arrival_probabilities}")
 
         # at the end of this iteration, we prepare the previous trip for the next iteration
         previous_trip = current_trip
@@ -397,11 +394,11 @@ def compute_reliability(
     product_probabilities_connections_made = 1
     for probability_connection_made in probabilities_connections_made:
         product_probabilities_connections_made *= probability_connection_made
-    logging.debug(f"** Probabilities of all connections made: {probabilities_connections_made}")
+    #logging.debug(f"** Probabilities of all connections made: {probabilities_connections_made}")
 
     # If we want to know the reliability of a partial path (not complete), then we return the probabilities separately
     if not complete_path:
-        logging.debug(f"Prob. of arrival before time limit: {probability_arrival_before_time_limit}, Prob. of all connections made: {product_probabilities_connections_made}")
+        #logging.debug(f"Prob. of arrival before time limit: {probability_arrival_before_time_limit}, Prob. of all connections made: {product_probabilities_connections_made}")
         return probability_arrival_before_time_limit, product_probabilities_connections_made
 
     reliability = probability_arrival_before_time_limit * product_probabilities_connections_made

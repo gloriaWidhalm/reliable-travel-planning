@@ -69,7 +69,7 @@ def get_graph_data(desired_date, data_path, start_time, end_time, start_station,
     # Also, here you can specify the date of interest
     #train_data = get_data(desired_date, database_path=data_path)
     train_data = get_data(database_path=data_path)
-    logging.info(f"Data loaded for {desired_date} {train_data.head()}")
+    logging.info(f"Data loaded for {desired_date}")
 
     # get graph structure from train data
     return process_route_data(train_data, start_time, end_time, start_station)
@@ -84,6 +84,8 @@ def print_path(path, start_node, start_time=0, convert_ids_to_names=False):
         print("No path found")
         return
     if convert_ids_to_names:
+        # check if start node is a string, if yes, skip
+
         start_station = get_specific_station_name_from_identifier(stop_id=start_node)
         start_node = start_station
     print(f"Start at {start_node} at {start_time}")
@@ -180,7 +182,7 @@ def get_specific_station_identifier_from_name(db_connection=None, stop_name=None
     else:
         connection = db_connection
     if stop_name:
-        query = f'''SELECT BPUIC FROM services WHERE STOP_NAME LIKE '%{stop_name}%' limit 1 '''
+        query = f'''SELECT BPUIC, STOP_NAME FROM services WHERE STOP_NAME LIKE '%{stop_name}%' limit 1 '''
     # optionally, we could
     #elif stop_id:
         #query = f'''SELECT STOP_NAME FROM services WHERE BPUIC = '{stop_id}' limit 1'''

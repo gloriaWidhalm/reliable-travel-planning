@@ -8,7 +8,7 @@ from copy import deepcopy
 # The heap queue is a regular heap data structure, where the smallest element is always popped first. (for us with the smallest distance)
 from heapq import heapify, heappop, heappush
 
-from algorithm.helper import is_transfer_needed, consolidate_path, merge_actual_times
+from algorithm.helper import is_transfer_needed, consolidate_path, merge_actual_times, get_specific_station_name_from_identifier
 from algorithm.reliability_v2 import compute_reliability, TRANSFER_TIME_DEFAULT
 from constants import LOG_LEVEL
 
@@ -65,6 +65,8 @@ class Graph:
         @param start_time: the start time in minutes
         @param transfer_time: the transfer time in minutes
         """
+        # @todo remove
+        logging.info(f"Find shortest path from {source} to {target} starting at {start_time}")
         # initialize the arrival_times (distances in terms of time) with infinity
         earliest_arrival_times = {node: float('inf') for node in self.graph}
         # for the source node, the distance is the start time
@@ -82,9 +84,9 @@ class Graph:
             # get the node with the earliest arrival time (highest priority)
             # current_time in a sense of cost
             current_arrival, current_node, current_time, current_train_identifier, current_actual_times = heappop(priority_queue)
-
             # check if we have reached the destination (= target node)
             if current_node == target:
+                logging.debug(f"***Found target {current_node}")
                 break
 
             # go through all connections of the current node
@@ -102,6 +104,7 @@ class Graph:
                     connection_possible_condition = current_arrival + transfer_time <= departure_time if transfer_needed else current_arrival <= departure_time
                     # check if we can make the connection (meaning current arrival time + transfer time is smaller than the departure time of the connection)
                     if not connection_possible_condition:
+                        logging.debug(f"No connection possible (shortest path)")
                         continue
                     # calculate the travel time
                     travel_time = arrival_time - departure_time
@@ -118,22 +121,30 @@ class Graph:
                         # update the predecessor of the neighbor
                         predecessors[neighbor] = (departure_time, current_node, arrival_time, train_identifier, actual_times)
 
+        # check if the priority queue is empty and the current node is not the target, if so, we have not been able to find the shortest path
+        if len(priority_queue) == 0 and current_node != target:
+            logging.info(f"No shortest path could be found.")
+            return 0, []
+
         # reconstruct the shortest path
         path = []
         current_node = target
         while current_node != source:
-            # get info from the predecessor
-            departure_time, next_node, arrival_time, train_identifier, actual_times = predecessors[current_node]
-            # to have the same structure as the graph, only one element in the list
-            path.append({"from": next_node, "to": current_node, "planned_departure": departure_time, "planned_arrival": arrival_time, "trip_id": train_identifier,
-                                   "actual_times": actual_times})
-            current_node = next_node
+            if current_node in predecessors:
+                # get info from the predecessor
+                departure_time, next_node, arrival_time, train_identifier, actual_times = predecessors[current_node]
+                # to have the same structure as the graph, only one element in the list
+                path.append({"from": next_node, "to": current_node, "planned_departure": departure_time, "planned_arrival": arrival_time, "trip_id": train_identifier,
+                                       "actual_times": actual_times})
+                current_node = next_node
+            else:
+                logging.info(f"For some reason the current node {current_node} is not in the predecessors.")
+                break
         # reverse the path to get the correct order (from source to target)
         path.reverse()
 
         # go through path and consolidate trips where the same train is used (remove intermediate stations)
         consolidated_path = consolidate_path(path)
-
 
 
         return earliest_arrival_times[target], consolidated_path
@@ -169,19 +180,28 @@ class Graph:
             # first, we need the station (which is the arrival station, or "to")
             last_station = last_trip["to"]
             # then we can use the graph-structure to get all edges (connections) from this node/station
-            # @todo: add function that returns only the connections that are after our start time
+            # @todo: add function that returns only the connections that are after our current time? (already after start time because of network generation)
             # if there are connections in the graph for this station, go through them, otherwise continue
             if last_station not in self.graph:
+                logging.debug(f"No connections for this station {last_station}")
                 continue
+
+            # prepare the extended path (add the connection to the path)
+            extended_trips = deepcopy(path_highest_reliability[position_of_trips])  # the trips in the tuple
+            # simplification: if the number of trips is more than 4, we skip all possible connections from here (we have already reached the maximum number of trips)
+            # This is a simplification to speed up the process, we assume that no one would transfer more than 3 times
+            # @todo adjust again and add again to code
+            # if len(extended_trips) > 7:
+            #     logging.debug("More than 7 trips, skipping all possible connections from here")
+            #     continue
+
             possible_connections = self.graph[last_station] # possible connections = adjacent edges
             # go through all adjacent edges to "build"/extend our path towards our target/destination further
             for connection in possible_connections:
                 # check if the planned departure time of the connection is greater than the planned arrival time of the last trip
                 if "planned_arrival" in last_trip and connection["planned_departure"] < last_trip["planned_arrival"]:
+                    #logging.debug(f"Connection is before arrival of last trip {last_trip}, connection: {connection}")
                     continue
-
-                # prepare the extended path (add the connection to the path)
-                extended_trips = deepcopy(path_highest_reliability[position_of_trips])  # the trips in the tuple
 
                 # check if a transfer is needed between last trip and current connection, if no transfer is needed
                 # we consolidate the trips (e.g., we have a "direct" connection from A to C (same train), we can remove the connection from A to B and B to C,
@@ -191,10 +211,16 @@ class Graph:
                 transfer_needed = is_transfer_needed(train_identifier_last_trip, train_identifier_current_connection)
                 if not transfer_needed:
                     actual_times = merge_actual_times(last_trip["actual_times"], connection["actual_times"])
+                    logging.debug(f"Length of actual times: {len(actual_times)}")
                     if len(actual_times) > 0:
                         # consolidate: update the last trip and current connection -> we remove the intermediate station,
                         # so we set the arrival station of the last trip to the arrival station of the current connection and update the actual times and the planned arrival time
                         # e.g., A -> B and B -> C, we remove B and have A -> C
+                        logging.debug(f"No transfer needed, consolidate path)")  # {extended_trips}")
+                        last_trip_departure_station = get_specific_station_name_from_identifier(stop_id=last_trip["from"]) if last_trip["from"] is not None else "None"
+                        last_trip_arrival_station = get_specific_station_name_from_identifier(stop_id=last_trip["to"])
+                        connection_arrival_station = get_specific_station_name_from_identifier(stop_id=connection["to"])
+                        logging.debug(f"Trip: {last_trip_departure_station} -> {last_trip_arrival_station} to {connection_arrival_station}")
                         last_trip["to"] = connection["to"]
                         last_trip["planned_arrival"] = connection["planned_arrival"]
                         # update the actual times
@@ -207,12 +233,6 @@ class Graph:
                 else:
                     # if no actual times are available, we just add the connection to the extended path
                     extended_trips.append(connection)
-
-                # if the number of trips is more than 4, we skip the connection (we have already reached the maximum number of trips)
-                # This is a simplification to speed up the process, we assume that no one would transfer more than 4 times
-                if len(extended_trips) > 4:
-                    continue
-
 
                 probability_arrival, probability_connection_made = compute_reliability(extended_trips, start_time, time_budget, complete_path=False, transfer_time=transfer_time)
 
@@ -227,6 +247,7 @@ class Graph:
 
                 # check if we have reached the destination (= target node)
                 if connection["to"] == target:
+                    logging.debug(f"Reached target: {connection}")
                     # compute the actual reliability of the path (probability of the last trip arriving at time t dependent on making the connections * probability of making the connections)
                     reliability_path = probability_arrival * probability_connection_made
                     logging.debug(f"Reliability path: {reliability_path}, probability arrival: {probability_arrival}, probability connection made: {probability_connection_made}")
@@ -236,11 +257,10 @@ class Graph:
                     if most_reliable_path is None or reliability_path > most_reliable_path[0]:
                         logging.debug(f"New most reliable path: {new_most_reliable_path}")
                         most_reliable_path = new_most_reliable_path
-                        #print(f"+++Most reliable path: reliability: {most_reliable_path[0]}, probability arrival: {probability_arrival}, probability connection made: {probability_connection_made}, label {k}")
-                        #print_path(most_reliable_path[position_of_trips][1:], source, start_time)
                 else:
                     # add the extended path to the priority queue
                     heappush(priority_queue, extended_path)
+                    logging.debug(f"Add path to queue: {get_specific_station_name_from_identifier(stop_id=extended_path[position_of_trips][-1]['to'])}")
         reliability = most_reliable_path[0] if most_reliable_path is not None else 0
         # check if the reliability is 0 (no reliable path found)
         if reliability == 0:

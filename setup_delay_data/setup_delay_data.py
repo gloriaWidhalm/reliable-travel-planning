@@ -3,7 +3,6 @@ import logging
 import duckdb
 
 from constants import LOG_LEVEL
-from algorithm.prototype import get_specific_station_identifier_from_name
 
 logging.basicConfig(level=LOG_LEVEL)
 
