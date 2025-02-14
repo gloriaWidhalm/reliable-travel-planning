@@ -71,6 +71,7 @@ def run_algorithms(graph, start, destination, start_time, time_budget_multiplier
     runtime = run_time_end - run_time_start
 
     return {
+        "start_time": start_time,
         "start_station": start,
         "destination_station": destination,
         "earliest_arrival_time": shortest_time,
@@ -114,7 +115,8 @@ def run_multiple_test_cases(test_cases):
         destination = case["destination"]
         start_time = case["start_time"]
         end_time_interval = case["end_time_interval"]
-        result = find_shortest_and_most_reliable_path(start, destination, start_time, end_time_interval=end_time_interval)
+        time_budget_multiplier = case["time_budget_multiplier"] if "time_budget_multiplier" in case else 1.5
+        result = find_shortest_and_most_reliable_path(start, destination, start_time, end_time_interval=end_time_interval, time_budget_multiplier=time_budget_multiplier, use_example=False)
         logging.debug("** Result **")
         logging.debug("Earliest arrival time:", result["earliest_arrival_time"])
         logging.debug("Shortest path reliability:", result["shortest_path_reliability"])
@@ -142,6 +144,9 @@ def run_multiple_test_cases(test_cases):
         # remove the paths from the result dictionary
         result.pop("shortest_path")
         result.pop("most_reliable_path")
+        # also add the start and destination station names
+        result["start_name"] = get_specific_station_name_from_identifier(stop_id=result["start_station"])
+        result["destination_name"] = get_specific_station_name_from_identifier(stop_id=result["destination_station"])
         # now save results in a csv file
         # add an index to the result dictionary
         result = {k: [v] for k, v in result.items()}
@@ -166,7 +171,8 @@ if __name__ == "__main__":
                 "start": "Luzern",
                 "destination": "Zug",
                 "start_time": 600,
-                "end_time_interval": 80
+                "end_time_interval": 80,
+                "time_budget_multiplier": 1.5
             },
         ]
 
