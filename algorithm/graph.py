@@ -189,18 +189,14 @@ class Graph:
             possible_connections = self.graph[last_station] # possible connections = adjacent edges
             # go through all adjacent edges to "build"/extend our path towards our target/destination further
             for connection in possible_connections:
-                # prepare the extended path (add the connection to the path)
-                extended_trips = deepcopy(path_highest_reliability[position_of_trips])  # the trips in the tuple
-                # simplification: if the number of trips is more than 4, we skip all possible connections from here (we have already reached the maximum number of trips)
-                # This is a simplification to speed up the process, we assume that no one would transfer more than 3 times
-                # @todo adjust again and add again to code
-                if len(extended_trips) > 4:
-                    logging.debug("More than 4 trips, skipping all possible connections from here")
-                    continue
+
                 # check if the planned departure time of the connection is greater than the planned arrival time of the last trip
                 if "planned_arrival" in last_trip and connection["planned_departure"] < last_trip["planned_arrival"]:
                     #logging.debug(f"Connection is before arrival of last trip {last_trip}, connection: {connection}")
                     continue
+
+                # prepare the extended path (add the connection to the path)
+                extended_trips = deepcopy(path_highest_reliability[position_of_trips])  # the trips in the tuple
 
                 # check if a transfer is needed between last trip and current connection, if no transfer is needed
                 # we consolidate the trips (e.g., we have a "direct" connection from A to C (same train), we can remove the connection from A to B and B to C,
@@ -233,6 +229,13 @@ class Graph:
                     # if no actual times are available, we just add the connection to the extended path
                     extended_trips.append(connection)
 
+                # simplification: if the number of trips is more than 4, we skip all possible connections from here (we have already reached the maximum number of trips)
+                # This is a simplification to speed up the process, we assume that no one would transfer more than 3 times
+                # @todo adjust again and add again to code
+                if len(extended_trips) > 4:
+                    logging.debug("More than 4 trips, skipping all possible connections from here")
+                    continue
+
                 probability_arrival, probability_connection_made = compute_reliability(extended_trips, start_time, time_budget, complete_path=False, transfer_time=transfer_time)
 
                 # adjust the total time (time between start time and the scheduled arrival of the current tail flight in the itinerary/path)
@@ -263,6 +266,7 @@ class Graph:
         reliability = most_reliable_path[0] if most_reliable_path is not None else 0
         # check if the reliability is 0 (no reliable path found)
         if reliability == 0:
+            logging.info("No reliable path found")
             return None, 0, None
         # get the arrival time of the most reliable path
         arrival_time = start_time + most_reliable_path[2]

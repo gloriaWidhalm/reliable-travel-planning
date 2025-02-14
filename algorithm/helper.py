@@ -97,8 +97,9 @@ def print_path(path, start_node, start_time=0, convert_ids_to_names=False):
             node = get_specific_station_name_from_identifier(stop_id=node)
         identifier = trip["trip_id"]
         if convert_ids_to_names:
+            identifier_id = identifier
             identifier = get_specific_trip_identifier_from_identifier(trip_id=identifier)
-        print(f"Take {identifier} to {node} at {departure_time} and arrive at {arrival_time}")
+        print(f"Take {identifier} to {node} at {departure_time} and arrive at {arrival_time}, (technical identifier: {identifier_id})")
 
 
 
