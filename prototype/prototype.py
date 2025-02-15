@@ -161,19 +161,19 @@ if __name__ == "__main__":
 
         # prepare multiple test cases to run
         test_cases = [
-            # {
-            #     "start": "Luzern",
-            #     "destination": "Bern",
-            #     "start_time": 600,
-            #     "end_time_interval": 120
-            # },
             {
                 "start": "Luzern",
-                "destination": "Zug",
+                "destination": "Bern",
                 "start_time": 600,
-                "end_time_interval": 80,
-                "time_budget_multiplier": 1.5
+                "end_time_interval": 180
             },
+            # {
+            #     "start": "Luzern",
+            #     "destination": "Zug",
+            #     "start_time": 600,
+            #     "end_time_interval": 80,
+            #     "time_budget_multiplier": 1.5
+            # },
         ]
 
         run_multiple_test_cases(test_cases)

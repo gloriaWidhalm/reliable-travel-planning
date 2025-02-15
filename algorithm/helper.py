@@ -217,3 +217,27 @@ def get_specific_trip_identifier_from_identifier(db_connection=None, trip_id=Non
     if df.empty or "LINE_TEXT" not in df.columns:
         return trip_id # return the original trip id if the query did not return anything
     return df['LINE_TEXT'][0]
+
+
+def get_coordinates_from_station_list(db_connection=None, station_list=None, use_stop_name=True):
+    if not db_connection:
+        connection = duckdb.connect("../data/gtfs_train.db", read_only=True)
+    else:
+        connection = db_connection
+    if station_list:
+        if use_stop_name:
+            query = f'''SELECT stop_id, stop_name, stop_lat, stop_lon FROM stops WHERE stop_name IN {tuple(station_list)}'''
+        else:
+            query = f'''SELECT stop_id, stop_name, stop_lat, stop_lon FROM stops WHERE stop_id IN {tuple(station_list)}'''
+    df = connection.execute(query).df()
+    # remove duplicates based on stop_name, lat, lon
+    df = df.drop_duplicates(subset=['stop_name', 'stop_lat', 'stop_lon'])
+    return df
+
+def minutes_to_time(minutes):
+    """
+    Convert minutes to time
+    """
+    hours = minutes // 60
+    minutes = minutes % 60
+    return f"{hours:02}:{minutes:02}"
