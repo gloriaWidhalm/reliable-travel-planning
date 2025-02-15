@@ -50,6 +50,12 @@ if __name__ == "__main__":
     start_time = results_metadata["start_time"].iloc[0]
     earliest_arrival_time = results_metadata["earliest_arrival_time"].iloc[0]
     most_reliable_arrival_time = results_metadata["arrival_time_most_reliable_path"].iloc[0]
+    shortest_path_reliability = results_metadata["shortest_path_reliability"].iloc[0]
+    most_reliable_path_reliability = results_metadata["reliability"].iloc[0]
+    time_budget = results_metadata["time_budget"].iloc[0] if "time_budget" in results_metadata.columns else None
+    if time_budget is None:
+        # did not have the time budget in all result runs, used 1.5 most of the time
+        time_budget = (earliest_arrival_time - start_time) * 1.5
 
     shortest_path_graph, shortest_path_coordinates = get_graph_and_stations_from_path(shortest_path)
     most_reliable_path_graph, most_reliable_path_coordinates = get_graph_and_stations_from_path(most_reliable_path)
@@ -59,5 +65,8 @@ if __name__ == "__main__":
     most_reliable_path_station_map = get_station_map_from_station_coordinates(most_reliable_path_coordinates)
 
     # plot the graphs
-    plot_graph(shortest_path_graph, pos=shortest_path_station_map, title=f"Shortest path between {start} and {destination}, \n starting at {minutes_to_time(start_time)} and arriving at {minutes_to_time(earliest_arrival_time)}", save=True, filename=f"shortest_path_{results_file}.png")
-    plot_graph(most_reliable_path_graph, pos=most_reliable_path_station_map, title=f"Most reliable path between {start} and {destination}, \n starting at {minutes_to_time(start_time)} and arriving at {minutes_to_time(most_reliable_arrival_time)}", save=True, filename=f"most_reliable_path_{results_file}.png", edge_color="purple")
+    plot_graph(shortest_path_graph, pos=shortest_path_station_map, title=f"Shortest path between {start} and {destination}, \n starting at {minutes_to_time(start_time)} and arriving at {minutes_to_time(earliest_arrival_time)}, reliability: {round(shortest_path_reliability*100)}%", save=True, filename=f"shortest_path_{results_file}.png")
+    additional_text_both_paths = f"Shortest path:\narrival: {minutes_to_time(earliest_arrival_time)},\nreliability: {round(shortest_path_reliability*100)}% \n"\
+                                 f"Most reliable path:\narrival: {minutes_to_time(most_reliable_arrival_time)},\nreliability: {round(most_reliable_path_reliability*100)}%,\ntime budget: {round(time_budget)} min"
+    plot_graph(most_reliable_path_graph, pos=most_reliable_path_station_map, title=f"Most reliable and shortest path between {start} and {destination}, \n starting at {minutes_to_time(start_time)}", save=True, filename=f"most_reliable_and_shortest_path_{results_file}.png", edge_color="purple", reset=False, additional_text=additional_text_both_paths)
+    plot_graph(most_reliable_path_graph, pos=most_reliable_path_station_map, title=f"Most reliable path between {start} and {destination} with a time budget \n of {round(time_budget)} min, starting at {minutes_to_time(start_time)} and arriving at {minutes_to_time(most_reliable_arrival_time)}, reliability: {round(most_reliable_path_reliability*100)}%", save=True, filename=f"most_reliable_path_{results_file}.png", edge_color="purple", reset=True)

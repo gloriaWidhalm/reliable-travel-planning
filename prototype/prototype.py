@@ -8,9 +8,7 @@ from constants import LOG_LEVEL
 
 logging.basicConfig(level=LOG_LEVEL)
 
-import duckdb
-
-from algorithm.evaluate_shortest_paths import get_graph_data
+from algorithm.old.evaluate_shortest_paths import get_graph_data
 from algorithm.graph import Graph
 from algorithm.helper import print_path, get_specific_station_identifier_from_name, get_specific_station_name_from_identifier
 from algorithm.reliability_v2 import compute_reliability

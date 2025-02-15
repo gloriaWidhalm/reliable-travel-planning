@@ -16,11 +16,14 @@ stops = [{'stop_name': 'Zürich HB', 'stop_lat': 47.378177, 'stop_lon': 8.540212
 # map stops for graph visualization: {"stop_name": [stop_lat, stop_lon]}
 stops_map = {stop['stop_name']: [stop['stop_lon'], stop['stop_lat']] for stop in stops}
 
-def plot_graph(graph, pos=stops_map, title=None, save=False, save_path=None, filename=None, edge_color=None):
+def plot_graph(graph, pos=stops_map, title=None, save=False, save_path=None, filename=None, edge_color=None, reset=True, additional_text=None):
     """
     Plot the graph using networkx and matplotlib
     Based on: https://networkx.org/documentation/stable/auto_examples/drawing/plot_multigraphs.html
     """
+    # reset plot
+    if reset:
+        plt.clf()
 
     def _draw_labeled_multigraph(G, attr_name, pos, ax=None, edge_color=None):
         """
@@ -119,6 +122,10 @@ def plot_graph(graph, pos=stops_map, title=None, save=False, save_path=None, fil
     # Set title if title is not None
     if title is not None:
         plt.title(title)
+
+    # add additional text in the top left corner within the graph, smaller font
+    if additional_text:
+        plt.text(0.135, 0.7, additional_text, fontsize=8, transform=plt.gcf().transFigure)
 
     # save the plot if save is True
     if save:
