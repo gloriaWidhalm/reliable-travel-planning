@@ -231,7 +231,6 @@ class Graph:
 
                 # simplification: if the number of trips is more than 4, we skip all possible connections from here (we have already reached the maximum number of trips)
                 # This is a simplification to speed up the process, we assume that no one would transfer more than 3 times
-                # @todo adjust again and add again to code
                 if len(extended_trips) > 4:
                     logging.debug("More than 4 trips, skipping all possible connections from here")
                     continue

@@ -28,7 +28,7 @@ if __name__ == "__main__":
     destination = 8501000 # Zimeysa
 
     # get data
-    graph = get_graph_data("2024-10-02", "../transport_data.db", start_time, end_time, start, use_example_data=False)
+    graph = get_graph_data("2024-10-02", "../../transport_data.db", start_time, end_time, start, use_example_data=False)
     logging.info("Graph data loaded")
 
     # idea: could define a list of start node, start time and destination node and loop over it, then save the results in a pandas dataframe and export it to a csv file (for further analysis)
