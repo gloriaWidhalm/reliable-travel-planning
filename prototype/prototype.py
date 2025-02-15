@@ -129,6 +129,11 @@ def run_multiple_test_cases(test_cases):
         shortest_path = result["shortest_path"]
         most_reliable_path = result["most_reliable_path"]
 
+        # get time budget
+        time_budget = (result["earliest_arrival_time"] - start_time) * time_budget_multiplier
+        # save the time budget in the result dictionary
+        result["time_budget"] = round(time_budget)
+
         # save these two paths in a csv file
         shortest_path_df = pd.DataFrame(shortest_path)
         path_df = pd.DataFrame(most_reliable_path)
@@ -159,19 +164,19 @@ if __name__ == "__main__":
 
         # prepare multiple test cases to run
         test_cases = [
-            {
-                "start": "Luzern",
-                "destination": "Bern",
-                "start_time": 600,
-                "end_time_interval": 180
-            },
             # {
             #     "start": "Luzern",
-            #     "destination": "Zug",
+            #     "destination": "Bern",
             #     "start_time": 600,
-            #     "end_time_interval": 80,
-            #     "time_budget_multiplier": 1.5
+            #     "end_time_interval": 180
             # },
+            {
+                "start": "Luzern",
+                "destination": "Zug",
+                "start_time": 600,
+                "end_time_interval": 80,
+                "time_budget_multiplier": 1.5
+            },
         ]
 
         run_multiple_test_cases(test_cases)
