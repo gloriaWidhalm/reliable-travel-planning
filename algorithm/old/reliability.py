@@ -51,7 +51,7 @@ def add_departure_probabilities(station_trips: dict):
 
 
 def get_all_arrival_probabilities_trip(
-        arrival_times: List[int],
+    arrival_times: List[int],
 ) -> List[tuple[int, float]]:
     """
     Get all arrival probabilities for a given trip
@@ -77,9 +77,9 @@ def get_arrival_times_from_trip(trip: dict) -> List[int]:
 
 #  @todo -> always pass in the arrival probabilities -> if it is the first connection, we compute them beforehand separately
 def compute_probability_to_arrive_at_or_before(
-        time_limit: int,
-        arrival_probabilities: List[tuple[int, float]],
-        arrival_times: List[int],
+    time_limit: int,
+    arrival_probabilities: List[tuple[int, float]],
+    arrival_times: List[int],
 ) -> float:
     """
     Compute the probability of arriving at or before a given time given a list of arrival probabilities that were calculated beforehand
@@ -105,11 +105,11 @@ def compute_probability_to_arrive_at_or_before(
 
 
 def compute_connection_probability(
-        departure_probabilities: List[tuple[int, float]],
-        arrival_probabilities: List[tuple[int, float]],
-        arrival_times: List[int],
-        transfer_needed: bool,
-        transfer_time=TRANSFER_TIME_DEFAULT,
+    departure_probabilities: List[tuple[int, float]],
+    arrival_probabilities: List[tuple[int, float]],
+    arrival_times: List[int],
+    transfer_needed: bool,
+    transfer_time=TRANSFER_TIME_DEFAULT,
 ) -> float:
     # @todo -> refactor a bit (to make it useful for the next steps, e.g. how the parameters are passed and how the data is stored)
     """
@@ -138,14 +138,14 @@ def compute_connection_probability(
 
 
 def compute_probability_to_arrive_at_t_given_connection_made(
-        arrival_time: int,
-        departure_probabilities: List,
-        arrival_probabilities: List | None,
-        arrival_times: List[int],
-        probability_connection_made: float,
-        arrival_departure_tuples: List,
-        transfer_needed: bool,
-        transfer_time=5,
+    arrival_time: int,
+    departure_probabilities: List,
+    arrival_probabilities: List | None,
+    arrival_times: List[int],
+    probability_connection_made: float,
+    arrival_departure_tuples: List,
+    transfer_needed: bool,
+    transfer_time=5,
 ) -> float:
     """Compute the probability of arriving at time t given that we made the connection."""
     probabilities = []
@@ -162,14 +162,14 @@ def compute_probability_to_arrive_at_t_given_connection_made(
                 occurence_arrival_departure_pair += 1
         # probability of arriving at time t given that we depart at t'
         probability_arrival_t_departure_t_prime = (
-                occurence_arrival_departure_pair / len(arrival_departure_tuples)
+            occurence_arrival_departure_pair / len(arrival_departure_tuples)
         )
 
         # probability of departing at time t'
         probability_departure = t_dep[1]
         # probability of arriving at time t given that we depart at t'
         probability_arrival_given_departure = (
-                probability_arrival_t_departure_t_prime / probability_departure
+            probability_arrival_t_departure_t_prime / probability_departure
         )
 
         # probability of arriving at or before t' given the arrival probabilities
@@ -187,10 +187,10 @@ def compute_probability_to_arrive_at_t_given_connection_made(
 
         # conditional probability of arriving at time t given that we made the connection
         probability = (
-                              probability_departure
-                              * probability_arrival_before_t_prime
-                              * probability_arrival_given_departure
-                      ) / probability_connection_made
+            probability_departure
+            * probability_arrival_before_t_prime
+            * probability_arrival_given_departure
+        ) / probability_connection_made
 
         # print("Probability of arriving at time t given that we made the connection:", probability)
 
@@ -201,7 +201,12 @@ def compute_probability_to_arrive_at_t_given_connection_made(
     return probability_sum
 
 
-def compute_arrival_probability_last_trip(start_time: int, time_budget: int, arrival_probabilities: List[tuple[int, float]], arrival_times: List[int]):
+def compute_arrival_probability_last_trip(
+    start_time: int,
+    time_budget: int,
+    arrival_probabilities: List[tuple[int, float]],
+    arrival_times: List[int],
+):
     """
     Compute the probability of arriving at the destination at or before the time limit for the last trip
     """
@@ -213,11 +218,11 @@ def compute_arrival_probability_last_trip(start_time: int, time_budget: int, arr
 
 
 def compute_reliability(
-        station_trips: dict,
-        start_time: int,
-        time_budget: int,
-        complete_path = True, # whether we want the reliability for a partial path (sequence of trips) or a complete one
-        transfer_time=TRANSFER_TIME_DEFAULT,
+    station_trips: dict,
+    start_time: int,
+    time_budget: int,
+    complete_path=True,  # whether we want the reliability for a partial path (sequence of trips) or a complete one
+    transfer_time=TRANSFER_TIME_DEFAULT,
 ) -> float | tuple[float, float]:
     """
     Compute the reliability of a connection given a list of trips and a start time and time budget
@@ -247,7 +252,10 @@ def compute_reliability(
     # if the length is 1, we return the probability of arriving at the destination at or before the time limit
     if len(station_trips_copy) == 1:
         return compute_arrival_probability_last_trip(
-            start_time, time_budget, arrival_probabilities_first_trip, arrival_times_first_trip
+            start_time,
+            time_budget,
+            arrival_probabilities_first_trip,
+            arrival_times_first_trip,
         )
     # extract the second trip from the station trips (also handled a bit differently)
     second_trip = station_trips_copy[list(station_trips_copy.keys())[1]][0]
@@ -290,18 +298,26 @@ def compute_reliability(
     # making the first connection as reliability
     if len(station_trips_copy) == 2:
         probability_arrival_before_time_limit = compute_arrival_probability_last_trip(
-            start_time, time_budget, arrival_probabilities_second_trip, arrival_times_second_trip
+            start_time,
+            time_budget,
+            arrival_probabilities_second_trip,
+            arrival_times_second_trip,
         )
         # If we want to know the reliability of a partial path (not complete), then we return the probabilities separately
         if not complete_path:
-            return probability_arrival_before_time_limit, connection_made_first_second_trip
+            return (
+                probability_arrival_before_time_limit,
+                connection_made_first_second_trip,
+            )
         return probability_arrival_before_time_limit * connection_made_first_second_trip
 
     is_third_trip = True  # different handling for the third trip
 
     # prepare the data for the reliability computation
     last_trip_arrival_probabilities = []  # arrival probabilities
-    last_trip_connection_made = -1  # initialize with 1, if we have no connection, the probability is 1
+    last_trip_connection_made = (
+        -1
+    )  # initialize with 1, if we have no connection, the probability is 1
     last_trip_arrival_times = []  # arrival times
 
     # compute the rest of the connections (from the third trip onwards), connection probability and arrival probabilities given that we made the connection
@@ -319,7 +335,9 @@ def compute_reliability(
             connection_made_previous_trip = connection_made_first_second_trip
             is_third_trip = False
 
-        transfer_needed = is_transfer_needed(previous_trip["trip_id"], current_trip["trip_id"])
+        transfer_needed = is_transfer_needed(
+            previous_trip["trip_id"], current_trip["trip_id"]
+        )
         arrival_times = get_arrival_times_from_trip(current_trip)
         arrival_probabilities = []
 
@@ -358,13 +376,15 @@ def compute_reliability(
         last_trip_connection_made = connection_made
         last_trip_arrival_times = arrival_times
 
-
     # compute the reliability of the connection
     # first, compute the part where we check if we arrive at the destination at or before the time limit
     # then, we multiply this with the probability of making the last connection
 
     probability_arrival_before_time_limit = compute_arrival_probability_last_trip(
-        start_time, time_budget, last_trip_arrival_probabilities, last_trip_arrival_times
+        start_time,
+        time_budget,
+        last_trip_arrival_probabilities,
+        last_trip_arrival_times,
     )
     # if the last trip connection made is -1, throw exception
     if last_trip_connection_made == -1:
@@ -438,7 +458,16 @@ if __name__ == "__main__":
     reliability = compute_reliability(
         station_trips_dict, start_time, time_budget, transfer_time=1
     )
-    print("Start time:", start_time, "Time budget:", time_budget, "Earliest possible arrival:", earliest_possible_arrival, "Latest possible arrival:", start_time + time_budget)
+    print(
+        "Start time:",
+        start_time,
+        "Time budget:",
+        time_budget,
+        "Earliest possible arrival:",
+        earliest_possible_arrival,
+        "Latest possible arrival:",
+        start_time + time_budget,
+    )
     print("Reliability of the connection:", reliability)
 
     # @todo: integrate the probability of cancellations (e.g. extreme late arrivals?)

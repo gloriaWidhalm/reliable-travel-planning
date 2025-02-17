@@ -2,29 +2,39 @@
 from create_script_gtfs_tables_db import create_tables
 
 # Import the necessary libraries
-import os
 import zipfile
-import pandas as pd
 import duckdb
+
 
 def unzip_gtfs(path):
     # Unzip the GTFS file
-    with zipfile.ZipFile(path, 'r') as zip_ref:
-        zip_ref.extractall('./data/gtfs/gtfs_files')
+    with zipfile.ZipFile(path, "r") as zip_ref:
+        zip_ref.extractall("./data/gtfs/gtfs_files")
+
 
 def create_schema(connection):
     # Create the schema
-    create_tables(connection) # has "IF NOT EXISTS" in the create_table queries
+    create_tables(connection)  # has "IF NOT EXISTS" in the create_table queries
     # print db schema
     r = connection.sql("SHOW TABLES")
     print("Tables in the database:")
     print(r)
 
+
 def load_data(connection):
     # Load the data into the database
     # The files are in a text file with csv format (semicolon separated)
     # List of files
-    files_to_load = [ "agency.txt", "calendar.txt", "calendar_dates.txt", "routes.txt", "stop_times.txt", "stops.txt", "trips.txt", "transfers.txt"]
+    files_to_load = [
+        "agency.txt",
+        "calendar.txt",
+        "calendar_dates.txt",
+        "routes.txt",
+        "stop_times.txt",
+        "stops.txt",
+        "trips.txt",
+        "transfers.txt",
+    ]
 
     # Load the data into the database
     for file in files_to_load:
@@ -37,13 +47,12 @@ def load_data(connection):
         print(f"Number of entries in {file.split('.')[0]}: {r}")
 
 
-
 # main
 if __name__ == "__main__":
     # File path:
-    gtfs_path = '../data/gtfs/gtfs_train.zip'
+    gtfs_path = "../data/gtfs/gtfs_train.zip"
 
-    file_name_suffix = gtfs_path.split('/')[-1].split('.')[0]
+    file_name_suffix = gtfs_path.split("/")[-1].split(".")[0]
     # Connect to the database
     connection = duckdb.connect(f"./data/{file_name_suffix}.db", read_only=False)
 

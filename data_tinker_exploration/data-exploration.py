@@ -8,20 +8,20 @@ import pandas as pd
 connection = duckdb.connect("../transport_data.db", read_only=False)
 
 
-query = f""" CREATE TABLE IF NOT EXISTS services AS SELECT * FROM '../data/delay_data/*.csv'"""
+query = """ CREATE TABLE IF NOT EXISTS services AS SELECT * FROM '../data/delay_data/*.csv'"""
 connection.execute(query)
 
 r = connection.sql("DESCRIBE services")
-#print(r)
-#exit(0)
+# print(r)
+# exit(0)
 
 # Query the database
-query = f""" SELECT count(*) FROM services WHERE PRODUKT_ID='Zug' AND AN_PROGNOSE_STATUS='REAL' AND AB_PROGNOSE_STATUS='REAL'"""
-query = f""" SELECT HALTESTELLEN_NAME, ANKUNFTSZEIT, AN_PROGNOSE, ABFAHRTSZEIT, AB_PROGNOSE FROM services WHERE PRODUKT_ID='Zug' AND AN_PROGNOSE_STATUS='REAL' AND AB_PROGNOSE_STATUS='REAL' LIMIT 10"""
-pd.set_option('display.max_columns', None)
-query = f""" SELECT BETREIBER_NAME, HALTESTELLEN_NAME, COUNT(*) FROM services WHERE PRODUKT_ID='Zug' AND AN_PROGNOSE_STATUS='REAL' AND AB_PROGNOSE_STATUS='REAL' AND AN_PROGNOSE > try_strptime(ANKUNFTSZEIT, '%d.%m.%Y %H:%M') + INTERVAL 5 MINUTE GROUP BY BETREIBER_NAME, HALTESTELLEN_NAME ORDER BY 3 """
-query = f""" SELECT HALTESTELLEN_NAME, COUNT(*) FROM services WHERE PRODUKT_ID='Zug' AND AN_PROGNOSE_STATUS='REAL' AND AB_PROGNOSE_STATUS='REAL' AND AN_PROGNOSE > try_strptime(ANKUNFTSZEIT, '%d.%m.%Y %H:%M') + INTERVAL 5 MINUTE GROUP BY HALTESTELLEN_NAME ORDER BY 2 DESC """
-query = f""" 
+query = """ SELECT count(*) FROM services WHERE PRODUKT_ID='Zug' AND AN_PROGNOSE_STATUS='REAL' AND AB_PROGNOSE_STATUS='REAL'"""
+query = """ SELECT HALTESTELLEN_NAME, ANKUNFTSZEIT, AN_PROGNOSE, ABFAHRTSZEIT, AB_PROGNOSE FROM services WHERE PRODUKT_ID='Zug' AND AN_PROGNOSE_STATUS='REAL' AND AB_PROGNOSE_STATUS='REAL' LIMIT 10"""
+pd.set_option("display.max_columns", None)
+query = """ SELECT BETREIBER_NAME, HALTESTELLEN_NAME, COUNT(*) FROM services WHERE PRODUKT_ID='Zug' AND AN_PROGNOSE_STATUS='REAL' AND AB_PROGNOSE_STATUS='REAL' AND AN_PROGNOSE > try_strptime(ANKUNFTSZEIT, '%d.%m.%Y %H:%M') + INTERVAL 5 MINUTE GROUP BY BETREIBER_NAME, HALTESTELLEN_NAME ORDER BY 3 """
+query = """ SELECT HALTESTELLEN_NAME, COUNT(*) FROM services WHERE PRODUKT_ID='Zug' AND AN_PROGNOSE_STATUS='REAL' AND AB_PROGNOSE_STATUS='REAL' AND AN_PROGNOSE > try_strptime(ANKUNFTSZEIT, '%d.%m.%Y %H:%M') + INTERVAL 5 MINUTE GROUP BY HALTESTELLEN_NAME ORDER BY 2 DESC """
+query = """ 
 SELECT DISTINCT HALTESTELLEN_NAME
 FROM services 
 --WHERE PRODUKT_ID='Zug' 
@@ -32,7 +32,7 @@ AND LINIEN_ID = '534'
 """
 
 # Get the number of entries that have a delay of more than 5 minutes
-query = f""" 
+query = """ 
 SELECT count(*)
 FROM services 
 --WHERE PRODUKT_ID='Zug' 
@@ -40,7 +40,7 @@ WHERE AN_PROGNOSE_STATUS='REAL'
 AND AB_PROGNOSE_STATUS='REAL' 
 AND AN_PROGNOSE > try_strptime(ANKUNFTSZEIT, '%d.%m.%Y %H:%M') + INTERVAL 5 MINUTE 
 """
-query = f""" SELECT HALTESTELLEN_NAME, ANKUNFTSZEIT, AN_PROGNOSE, ABFAHRTSZEIT, AB_PROGNOSE FROM services WHERE PRODUKT_ID='Zug' AND AN_PROGNOSE_STATUS='REAL' AND AB_PROGNOSE_STATUS='REAL' LIMIT 10"""
+query = """ SELECT HALTESTELLEN_NAME, ANKUNFTSZEIT, AN_PROGNOSE, ABFAHRTSZEIT, AB_PROGNOSE FROM services WHERE PRODUKT_ID='Zug' AND AN_PROGNOSE_STATUS='REAL' AND AB_PROGNOSE_STATUS='REAL' LIMIT 10"""
 result = connection.sql(query).df()
 
 # Print the result
@@ -48,7 +48,7 @@ print("Entries with delays > 5 minutes:")
 print(result)
 
 # Get the number of entries that have a delay of more than 5 minutes
-query = f""" 
+query = """ 
 SELECT count(*)
 FROM services 
 WHERE PRODUKT_ID='Zug' 
@@ -63,7 +63,7 @@ print("Train entries with delays > 5 minutes:")
 print(result)
 
 # Get the average delay grouped by PRODUKT_ID
-query = f""" 
+query = """ 
 SELECT avg(epoch((AN_PROGNOSE - try_strptime(ANKUNFTSZEIT, '%d.%m.%Y %H:%M')))) as avg_delay, PRODUKT_ID
 FROM services 
 WHERE AN_PROGNOSE_STATUS='REAL' 
@@ -77,7 +77,7 @@ print("Average delay grouped by PRODUKT_ID:")
 print(result)
 
 # Get the count of all entries
-query = f""" 
+query = """ 
 SELECT count(*)
 FROM services 
 WHERE PRODUKT_ID='Zug'

@@ -2,16 +2,16 @@ import heapq
 
 # Step 0: Define a toy timetable graph
 graph = {
-    'Liestal': [(487, 'Olten', 505, 'IC6')],
-    'Basel SBB': [(475, 'Liestal', 486, 'IC6')],
-    'Olten': [(509, 'Bern', 536, 'IC6'), (451, 'Bern', 478, 'IC8')],
-    'Bern': [(547, 'Thun', 565, 'IC6'), (487, 'Thun', 505, 'IC8')],
-    'Thun': [(566, 'Spiez', 576, 'IC6'), (506, 'Spiez', 516, 'IC8')],
-    'Spiez': [(576, 'Visp', 602, 'IC6'), (516, 'Visp', 542, 'IC8')],
-    'Visp': [(603, 'Brig', 611, 'IC6'), (543, 'Brig', 551, 'IC8')],
-    'Brig': [],
-    'Aarau': [(438, 'Olten', 447, 'IC8')],
-    'Zürich HB': [(404, 'Aarau', 436, 'IC8')],
+    "Liestal": [(487, "Olten", 505, "IC6")],
+    "Basel SBB": [(475, "Liestal", 486, "IC6")],
+    "Olten": [(509, "Bern", 536, "IC6"), (451, "Bern", 478, "IC8")],
+    "Bern": [(547, "Thun", 565, "IC6"), (487, "Thun", 505, "IC8")],
+    "Thun": [(566, "Spiez", 576, "IC6"), (506, "Spiez", 516, "IC8")],
+    "Spiez": [(576, "Visp", 602, "IC6"), (516, "Visp", 542, "IC8")],
+    "Visp": [(603, "Brig", 611, "IC6"), (543, "Brig", 551, "IC8")],
+    "Brig": [],
+    "Aarau": [(438, "Olten", 447, "IC8")],
+    "Zürich HB": [(404, "Aarau", 436, "IC8")],
 }
 
 new_connections = [
@@ -39,12 +39,14 @@ for station, dep, dest, arr, train_id in new_connections:
     if dest not in graph:
         graph[dest] = []
 
+
 # -----------------------------------------------------------------------------
 # 1. Simple importance measure (e.g. by node degree)
 #    In real CH, you consider the # of shortcuts, edge difference, etc.
 # -----------------------------------------------------------------------------
 def calculate_node_importance(g):
     return {node: len(g[node]) for node in g}
+
 
 # -----------------------------------------------------------------------------
 # 2. Build (prototype) Contraction Hierarchy
@@ -95,13 +97,17 @@ def build_contraction_hierarchy(original_graph):
                 shortcut_arr = arr_i + cost_ij  # arrival at neigh_j
 
                 # Add a "shortcut" edge to ch_graph[neigh_i]
-                ch_graph[neigh_i].append((shortcut_dep, neigh_j, shortcut_arr, "shortcut"))
+                ch_graph[neigh_i].append(
+                    (shortcut_dep, neigh_j, shortcut_arr, "shortcut")
+                )
 
                 # Optionally add the reverse shortcut if your graph is undirected, or you need both directions
                 cost_ji = (arr_j - dep_j) + (arr_i - dep_i)
                 shortcut_dep_rev = arr_j
                 shortcut_arr_rev = arr_j + cost_ji
-                ch_graph[neigh_j].append((shortcut_dep_rev, neigh_i, shortcut_arr_rev, "shortcut"))
+                ch_graph[neigh_j].append(
+                    (shortcut_dep_rev, neigh_i, shortcut_arr_rev, "shortcut")
+                )
 
         # ----------------------
         # Mark this node as contracted
@@ -118,6 +124,7 @@ def build_contraction_hierarchy(original_graph):
         # Here we do not remove or filter to keep it simpler.
 
     return ch_graph, contracted
+
 
 # -----------------------------------------------------------------------------
 # 3. Query: Dijkstra on the augmented CH graph
@@ -144,13 +151,14 @@ def query_shortest_path(ch_graph, start, end, start_time):
         for dep_time, neighbor, arr_time, _ in ch_graph[current_node]:
             # We can only board if dep_time >= current_time
             if dep_time >= current_time:
-                travel = (arr_time - dep_time)
+                travel = arr_time - dep_time
                 arrival = current_time + travel
                 if arrival < best_arrival[neighbor]:
                     best_arrival[neighbor] = arrival
                     heapq.heappush(pq, (arrival, neighbor))
 
     return float("inf")  # no path
+
 
 # -----------------------------------------------------------------------------
 # 4. Demo usage
@@ -165,6 +173,7 @@ def print_graph(title, g, max_edges=15):
         if len(edges) > max_edges:
             print(f"    ...({len(edges)} edges total)")
 
+
 print_graph("Original Graph", graph)
 
 # Build the CH
@@ -178,11 +187,17 @@ for station, is_contracted in contracted_dict.items():
 
 # Query a route in the new CH graph
 start_station = "Zürich HB"
-end_station   = "Brig"
-depart_time   = 400  # 4:00 AM
+end_station = "Brig"
+depart_time = 400  # 4:00 AM
 
 best_time = query_shortest_path(ch_graph, start_station, end_station, depart_time)
-print(f"\nEarliest arrival from {start_station} to {end_station} if leaving at {depart_time}: {best_time}")
+print(
+    f"\nEarliest arrival from {start_station} to {end_station} if leaving at {depart_time}: {best_time}"
+)
 
-earliest_arrival_org = query_shortest_path(graph, start_station, end_station, depart_time)
-print(f"\nEarliest arrival time from {start_station} to {end_station} after {depart_time}, original graph: {earliest_arrival_org}")
+earliest_arrival_org = query_shortest_path(
+    graph, start_station, end_station, depart_time
+)
+print(
+    f"\nEarliest arrival time from {start_station} to {end_station} after {depart_time}, original graph: {earliest_arrival_org}"
+)

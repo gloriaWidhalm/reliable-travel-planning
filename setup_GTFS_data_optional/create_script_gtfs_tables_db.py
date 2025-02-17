@@ -1,6 +1,6 @@
 # Create the tables
 
-create_agency = f""" CREATE TABLE IF NOT EXISTS agency (
+create_agency = """ CREATE TABLE IF NOT EXISTS agency (
     agency_id VARCHAR NOT NULL, --PRIMARY KEY,
     agency_name VARCHAR NOT NULL,
     agency_url VARCHAR NOT NULL,
@@ -9,7 +9,7 @@ create_agency = f""" CREATE TABLE IF NOT EXISTS agency (
     agency_phone VARCHAR
 );"""
 
-create_route = f"""
+create_route = """
 CREATE TABLE IF NOT EXISTS routes (
     route_id VARCHAR, --PRIMARY KEY,
     agency_id VARCHAR,
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS routes (
     --FOREIGN KEY (agency_id) REFERENCES agency(agency_id)
 ); """
 
-create_calendar = f""" CREATE TABLE IF NOT EXISTS calendar (
+create_calendar = """ CREATE TABLE IF NOT EXISTS calendar (
     service_id VARCHAR NOT NULL, --PRIMARY KEY,
     monday INTEGER NOT NULL,
     tuesday INTEGER NOT NULL,
@@ -36,7 +36,7 @@ create_calendar = f""" CREATE TABLE IF NOT EXISTS calendar (
     end_date VARCHAR NOT NULL
 );"""
 
-create_calendar_dates = f""" CREATE TABLE IF NOT EXISTS calendar_dates (
+create_calendar_dates = """ CREATE TABLE IF NOT EXISTS calendar_dates (
     service_id VARCHAR NOT NULL,
     date VARCHAR NOT NULL,
     exception_type INTEGER NOT NULL,
@@ -44,7 +44,7 @@ create_calendar_dates = f""" CREATE TABLE IF NOT EXISTS calendar_dates (
     --FOREIGN KEY (service_id) REFERENCES calendar(service_id)
 );"""
 
-create_shape = f""" CREATE TABLE IF NOT EXISTS shapes (
+create_shape = """ CREATE TABLE IF NOT EXISTS shapes (
     shape_id VARCHAR NOT NULL,-- PRIMARY KEY,
     shape_pt_lat DECIMAL(9,6) NOT NULL,
     shape_pt_lon DECIMAL(9,6) NOT NULL,
@@ -52,7 +52,7 @@ create_shape = f""" CREATE TABLE IF NOT EXISTS shapes (
     shape_dist_traveled DECIMAL(9,6)
 );"""
 
-create_trip = f""" CREATE TABLE IF NOT EXISTS trips (
+create_trip = """ CREATE TABLE IF NOT EXISTS trips (
     route_id VARCHAR NOT NULL,
     service_id VARCHAR NOT NULL,
     trip_id VARCHAR NOT NULL,-- PRIMARY KEY,
@@ -66,7 +66,7 @@ create_trip = f""" CREATE TABLE IF NOT EXISTS trips (
     --FOREIGN KEY (shape_id) REFERENCES shape(shape_id)
 );"""
 
-create_stop = f""" CREATE TABLE IF NOT EXISTS stops (
+create_stop = """ CREATE TABLE IF NOT EXISTS stops (
     stop_id VARCHAR NOT NULL,-- PRIMARY KEY,
     stop_code VARCHAR,
     stop_name VARCHAR NOT NULL,
@@ -80,7 +80,7 @@ create_stop = f""" CREATE TABLE IF NOT EXISTS stops (
     --FOREIGN KEY (parent_station) REFERENCES stops(stop_id)
 ); """
 
-create_stop_time = f""" CREATE TABLE IF NOT EXISTS stop_times (
+create_stop_time = """ CREATE TABLE IF NOT EXISTS stop_times (
     trip_id VARCHAR NOT NULL,
     arrival_time VARCHAR,
     departure_time VARCHAR,
@@ -95,7 +95,7 @@ create_stop_time = f""" CREATE TABLE IF NOT EXISTS stop_times (
     --FOREIGN KEY (stop_id) REFERENCES stops(stop_id)
 );"""
 
-create_transfer = f"""CREATE TABLE IF NOT EXISTS transfers (
+create_transfer = """CREATE TABLE IF NOT EXISTS transfers (
     from_stop_id VARCHAR NOT NULL,
     to_stop_id VARCHAR NOT NULL,
     transfer_type INTEGER NOT NULL,
@@ -105,7 +105,16 @@ create_transfer = f"""CREATE TABLE IF NOT EXISTS transfers (
     --FOREIGN KEY (to_stop_id) REFERENCES stops(stop_id)
 ); """
 
-CREATE_TABLES = [create_agency, create_route, create_calendar, create_calendar_dates, create_trip, create_stop, create_stop_time, create_transfer]
+CREATE_TABLES = [
+    create_agency,
+    create_route,
+    create_calendar,
+    create_calendar_dates,
+    create_trip,
+    create_stop,
+    create_stop_time,
+    create_transfer,
+]
 
 
 def create_tables(connection, create_tables=CREATE_TABLES):

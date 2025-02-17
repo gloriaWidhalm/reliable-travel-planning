@@ -1,0 +1,2 @@
+,start_time,start_station,destination_station,earliest_arrival_time,shortest_path_reliability,runtime_shortest_path,arrival_time_most_reliable_path,reliability,runtime,runtime_generate_graph,time_budget,start_name,destination_name
+0,600,8505000,8502204,657,0.7824,0.0,665,1.0,63.2943902015686,69.734947681427,86,Luzern,Zug

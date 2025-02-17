@@ -8,6 +8,7 @@ from heapq import heapify, heappop, heappush
 
 # Maybe this is redundant, and we want to use networkx instead!
 
+
 class Graph:
     def __init__(self, graph=None):
         if graph is None:
@@ -36,7 +37,7 @@ class Graph:
         Compute the shortest distances from the source node to all other nodes in the graph
         """
         # initialize distances with infinity
-        distances = {node: float('inf') for node in self.graph}
+        distances = {node: float("inf") for node in self.graph}
         # for the source node, the distance is 0
         distances[source] = 0
         # set of visited nodes
@@ -45,7 +46,9 @@ class Graph:
         # we want to use the concept of a priority queue, the node with the highest priority is the one with the smallest distance
         # the smallest distance can also be seen as the cost/time/reliability-weighted time to reach a node
         priority_queue = [(0, source)]
-        heapify(priority_queue)  # heapify the list to maintain the heap property (priority queue)
+        heapify(
+            priority_queue
+        )  # heapify the list to maintain the heap property (priority queue)
 
         # we loop over the priority queue until it is empty
         while priority_queue:

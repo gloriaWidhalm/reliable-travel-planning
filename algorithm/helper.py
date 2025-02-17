@@ -9,15 +9,24 @@ from retrieve_data.Network_wcancelled import get_data, process_route_data
 logging.basicConfig(level=LOG_LEVEL)
 
 
-def is_transfer_needed(trip_identifier_1: str | None, trip_identifier_2: str | None) -> bool:
+def is_transfer_needed(
+    trip_identifier_1: str | None, trip_identifier_2: str | None
+) -> bool:
     """
     Check if a transfer is needed between two trips. If the trip identifiers are different, a transfer is needed.
     Otherwise, we assume we are in the same train and no transfer is needed.
     """
     # check if the trip identifiers are different
-    return trip_identifier_1 and trip_identifier_2 and trip_identifier_1 != trip_identifier_2
+    return (
+        trip_identifier_1
+        and trip_identifier_2
+        and trip_identifier_1 != trip_identifier_2
+    )
 
-def get_graph_data(desired_date, data_path, start_time, end_time, start_station, use_example_data=False):
+
+def get_graph_data(
+    desired_date, data_path, start_time, end_time, start_station, use_example_data=False
+):
     """
     Get the graph data
     """
@@ -32,47 +41,139 @@ def get_graph_data(desired_date, data_path, start_time, end_time, start_station,
             # departure node with list of trips (departure nodes in the dictionary to be able to access the data easily)
             # "from" is just additional to be accessible anywhere
             # actual_times is a list of tuples with the actual departure and arrival times
-            'Liestal': [
-                {"from": 'Liestal', "to": 'Olten', "planned_departure": 487, "planned_arrival": 505, "trip_id": 'IC6', "actual_times": [(487, 505), (490, 508)]}
+            "Liestal": [
+                {
+                    "from": "Liestal",
+                    "to": "Olten",
+                    "planned_departure": 487,
+                    "planned_arrival": 505,
+                    "trip_id": "IC6",
+                    "actual_times": [(487, 505), (490, 508)],
+                }
             ],
-            'Olten': [
-                {"from": 'Olten', "to": 'Bern', "planned_departure": 509, "planned_arrival": 536, "trip_id": 'IC6', "actual_times": [(509, 536), (512, 539)]},
-                {"from": 'Olten', "to": 'Bern', "planned_departure": 451, "planned_arrival": 478, "trip_id": 'IC8', "actual_times": [(451, 478), (454, 481)]}
+            "Olten": [
+                {
+                    "from": "Olten",
+                    "to": "Bern",
+                    "planned_departure": 509,
+                    "planned_arrival": 536,
+                    "trip_id": "IC6",
+                    "actual_times": [(509, 536), (512, 539)],
+                },
+                {
+                    "from": "Olten",
+                    "to": "Bern",
+                    "planned_departure": 451,
+                    "planned_arrival": 478,
+                    "trip_id": "IC8",
+                    "actual_times": [(451, 478), (454, 481)],
+                },
             ],
-            'Bern': [
-                {"from": 'Bern', "to": 'Thun', "planned_departure": 547, "planned_arrival": 565, "trip_id": 'IC6', "actual_times": [(547, 565), (550, 568)]},
-                {"from": 'Bern', "to": 'Thun', "planned_departure": 487, "planned_arrival": 505, "trip_id": 'IC8', "actual_times": [(487, 505), (490, 508)]}
+            "Bern": [
+                {
+                    "from": "Bern",
+                    "to": "Thun",
+                    "planned_departure": 547,
+                    "planned_arrival": 565,
+                    "trip_id": "IC6",
+                    "actual_times": [(547, 565), (550, 568)],
+                },
+                {
+                    "from": "Bern",
+                    "to": "Thun",
+                    "planned_departure": 487,
+                    "planned_arrival": 505,
+                    "trip_id": "IC8",
+                    "actual_times": [(487, 505), (490, 508)],
+                },
             ],
-            'Thun': [
-                {"from": 'Thun', "to": 'Spiez', "planned_departure": 566, "planned_arrival": 576, "trip_id": 'IC6', "actual_times": [(566, 576), (569, 579)]},
-                {"from": 'Thun', "to": 'Spiez', "planned_departure": 506, "planned_arrival": 516, "trip_id": 'IC8', "actual_times": [(506, 516), (509, 519)]}
+            "Thun": [
+                {
+                    "from": "Thun",
+                    "to": "Spiez",
+                    "planned_departure": 566,
+                    "planned_arrival": 576,
+                    "trip_id": "IC6",
+                    "actual_times": [(566, 576), (569, 579)],
+                },
+                {
+                    "from": "Thun",
+                    "to": "Spiez",
+                    "planned_departure": 506,
+                    "planned_arrival": 516,
+                    "trip_id": "IC8",
+                    "actual_times": [(506, 516), (509, 519)],
+                },
             ],
-            'Spiez': [
-                {"from": 'Spiez', "to": 'Visp', "planned_departure": 576, "planned_arrival": 602, "trip_id": 'IC6', "actual_times": [(576, 602), (579, 605)]},
-                {"from": 'Spiez', "to": 'Visp', "planned_departure": 516, "planned_arrival": 542, "trip_id": 'IC8', "actual_times": [(516, 542), (519, 545)]}
+            "Spiez": [
+                {
+                    "from": "Spiez",
+                    "to": "Visp",
+                    "planned_departure": 576,
+                    "planned_arrival": 602,
+                    "trip_id": "IC6",
+                    "actual_times": [(576, 602), (579, 605)],
+                },
+                {
+                    "from": "Spiez",
+                    "to": "Visp",
+                    "planned_departure": 516,
+                    "planned_arrival": 542,
+                    "trip_id": "IC8",
+                    "actual_times": [(516, 542), (519, 545)],
+                },
             ],
-            'Visp': [
-                {"from": 'Visp', "to": 'Brig', "planned_departure": 603, "planned_arrival": 611, "trip_id": 'IC6', "actual_times": [(603, 611), (606, 614)]},
-                {"from": 'Visp', "to": 'Brig', "planned_departure": 543, "planned_arrival": 551, "trip_id": 'IC8', "actual_times": [(543, 551), (546, 554)]}
+            "Visp": [
+                {
+                    "from": "Visp",
+                    "to": "Brig",
+                    "planned_departure": 603,
+                    "planned_arrival": 611,
+                    "trip_id": "IC6",
+                    "actual_times": [(603, 611), (606, 614)],
+                },
+                {
+                    "from": "Visp",
+                    "to": "Brig",
+                    "planned_departure": 543,
+                    "planned_arrival": 551,
+                    "trip_id": "IC8",
+                    "actual_times": [(543, 551), (546, 554)],
+                },
             ],
-            'Brig': [],
-            'Aarau': [
-                {"from": 'Aarau', "to": 'Olten', "planned_departure": 438, "planned_arrival": 447, "trip_id": 'IC8', "actual_times": [(438, 447), (441, 450)]}
+            "Brig": [],
+            "Aarau": [
+                {
+                    "from": "Aarau",
+                    "to": "Olten",
+                    "planned_departure": 438,
+                    "planned_arrival": 447,
+                    "trip_id": "IC8",
+                    "actual_times": [(438, 447), (441, 450)],
+                }
             ],
-            'Zürich HB': [
-                {"from": 'Zürich HB', "to": 'Aarau', "planned_departure": 404, "planned_arrival": 436, "trip_id": 'IC8', "actual_times": [(404, 436), (407, 439)]}
-            ]
+            "Zürich HB": [
+                {
+                    "from": "Zürich HB",
+                    "to": "Aarau",
+                    "planned_departure": 404,
+                    "planned_arrival": 436,
+                    "trip_id": "IC8",
+                    "actual_times": [(404, 436), (407, 439)],
+                }
+            ],
         }
         return graph
 
     # if the transport_data.db is in a different location, you can specify the path here
     # Also, here you can specify the date of interest
-    #train_data = get_data(desired_date, database_path=data_path)
+    # train_data = get_data(desired_date, database_path=data_path)
     train_data = get_data(database_path=data_path)
     logging.info(f"Data loaded for {desired_date}")
 
     # get graph structure from train data
     return process_route_data(train_data, start_time, end_time, start_station)
+
 
 def print_path(path, start_node, start_time=0, convert_ids_to_names=False):
     """
@@ -98,10 +199,12 @@ def print_path(path, start_node, start_time=0, convert_ids_to_names=False):
         identifier = trip["trip_id"]
         if convert_ids_to_names:
             identifier_id = identifier
-            identifier = get_specific_trip_identifier_from_identifier(trip_id=identifier)
-        print(f"Take {identifier} to {node} at {departure_time} and arrive at {arrival_time}, (technical identifier: {identifier_id})")
-
-
+            identifier = get_specific_trip_identifier_from_identifier(
+                trip_id=identifier
+            )
+        print(
+            f"Take {identifier} to {node} at {departure_time} and arrive at {arrival_time}, (technical identifier: {identifier_id})"
+        )
 
 
 def consolidate_path(path_lst: list[dict]) -> list[dict]:
@@ -120,7 +223,9 @@ def consolidate_path(path_lst: list[dict]) -> list[dict]:
     current_trip = path_lst[0]
 
     def _construct_payload(current_trip, next_trip):
-        actual_times = merge_actual_times(current_trip["actual_times"], next_trip["actual_times"])
+        actual_times = merge_actual_times(
+            current_trip["actual_times"], next_trip["actual_times"]
+        )
 
         return {
             "from": current_trip["from"],
@@ -128,9 +233,8 @@ def consolidate_path(path_lst: list[dict]) -> list[dict]:
             "planned_departure": current_trip["planned_departure"],
             "planned_arrival": next_trip["planned_arrival"],
             "trip_id": current_trip["trip_id"],
-            "actual_times": actual_times
+            "actual_times": actual_times,
         }
-
 
     # Iterate to the last trip_id
     for i in range(1, len(path_lst)):
@@ -153,6 +257,7 @@ def consolidate_path(path_lst: list[dict]) -> list[dict]:
 
     return consolidated_path
 
+
 def merge_actual_times(actual_times_first_trip, actual_times_second_trip):
     """
     Merge the actual times from the last trip and the current connection
@@ -168,12 +273,16 @@ def merge_actual_times(actual_times_first_trip, actual_times_second_trip):
     # get number of historic arrival times from the current connection
     number_actual_times_current_connection = len(actual_times_second_trip)
     # take the minimum of the two
-    number_actual_times = min(number_actual_times_last_trip, number_actual_times_current_connection)
+    number_actual_times = min(
+        number_actual_times_last_trip, number_actual_times_current_connection
+    )
     # now combine the actual times (departure from last trip and arrival from current connection), assuming the order is correct
     for i in range(number_actual_times):
         # add the actual times to the list, this is a simplification
         # (we could do a more sophisticated approach to check for the actual times and also to match them)
-        actual_times.append((actual_times_first_trip[i][0], actual_times_second_trip[i][1]))
+        actual_times.append(
+            (actual_times_first_trip[i][0], actual_times_second_trip[i][1])
+        )
     return actual_times
 
 
@@ -183,14 +292,15 @@ def get_specific_station_identifier_from_name(db_connection=None, stop_name=None
     else:
         connection = db_connection
     if stop_name:
-        query = f'''SELECT BPUIC, STOP_NAME FROM services WHERE STOP_NAME LIKE '%{stop_name}%' limit 1 '''
+        query = f"""SELECT BPUIC, STOP_NAME FROM services WHERE STOP_NAME LIKE '%{stop_name}%' limit 1 """
     # optionally, we could
-    #elif stop_id:
-        #query = f'''SELECT STOP_NAME FROM services WHERE BPUIC = '{stop_id}' limit 1'''
+    # elif stop_id:
+    # query = f'''SELECT STOP_NAME FROM services WHERE BPUIC = '{stop_id}' limit 1'''
     df = connection.execute(query).df()
     if df.empty or "BPUIC" not in df.columns:
         return stop_name
-    return df['BPUIC'][0]
+    return df["BPUIC"][0]
+
 
 def get_specific_station_name_from_identifier(db_connection=None, stop_id=None):
     if not db_connection:
@@ -198,12 +308,13 @@ def get_specific_station_name_from_identifier(db_connection=None, stop_id=None):
     else:
         connection = db_connection
     if stop_id:
-        query = f'''SELECT STOP_NAME FROM services WHERE BPUIC = '{stop_id}' limit 1'''
+        query = f"""SELECT STOP_NAME FROM services WHERE BPUIC = '{stop_id}' limit 1"""
     df = connection.execute(query).df()
 
     if df.empty or "STOP_NAME" not in df.columns:
         return stop_id
-    return df['STOP_NAME'][0]
+    return df["STOP_NAME"][0]
+
 
 def get_specific_trip_identifier_from_identifier(db_connection=None, trip_id=None):
     if not db_connection:
@@ -211,28 +322,33 @@ def get_specific_trip_identifier_from_identifier(db_connection=None, trip_id=Non
     else:
         connection = db_connection
     if trip_id:
-        query = f'''SELECT LINE_TEXT FROM services WHERE TRIP_IDENTIFIER = '{trip_id}' limit 1'''
+        query = f"""SELECT LINE_TEXT FROM services WHERE TRIP_IDENTIFIER = '{trip_id}' limit 1"""
     df = connection.execute(query).df()
 
     if df.empty or "LINE_TEXT" not in df.columns:
-        return trip_id # return the original trip id if the query did not return anything
-    return df['LINE_TEXT'][0]
+        return (
+            trip_id  # return the original trip id if the query did not return anything
+        )
+    return df["LINE_TEXT"][0]
 
 
-def get_coordinates_from_station_list(db_connection=None, station_list=None, use_stop_name=True):
+def get_coordinates_from_station_list(
+    db_connection=None, station_list=None, use_stop_name=True
+):
     if not db_connection:
         connection = duckdb.connect("../data/gtfs_train.db", read_only=True)
     else:
         connection = db_connection
     if station_list:
         if use_stop_name:
-            query = f'''SELECT stop_id, stop_name, stop_lat, stop_lon FROM stops WHERE stop_name IN {tuple(station_list)}'''
+            query = f"""SELECT stop_id, stop_name, stop_lat, stop_lon FROM stops WHERE stop_name IN {tuple(station_list)}"""
         else:
-            query = f'''SELECT stop_id, stop_name, stop_lat, stop_lon FROM stops WHERE stop_id IN {tuple(station_list)}'''
+            query = f"""SELECT stop_id, stop_name, stop_lat, stop_lon FROM stops WHERE stop_id IN {tuple(station_list)}"""
     df = connection.execute(query).df()
     # remove duplicates based on stop_name, lat, lon
-    df = df.drop_duplicates(subset=['stop_name', 'stop_lat', 'stop_lon'])
+    df = df.drop_duplicates(subset=["stop_name", "stop_lat", "stop_lon"])
     return df
+
 
 def minutes_to_time(minutes):
     """

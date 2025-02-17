@@ -10,10 +10,17 @@ logging.basicConfig(level=LOG_LEVEL)
 
 from algorithm.old.evaluate_shortest_paths import get_graph_data
 from algorithm.graph import Graph
-from algorithm.helper import print_path, get_specific_station_identifier_from_name, get_specific_station_name_from_identifier
+from algorithm.helper import (
+    print_path,
+    get_specific_station_identifier_from_name,
+    get_specific_station_name_from_identifier,
+)
 from algorithm.reliability_v2 import compute_reliability
 
-def setup_network_data(start, destination, start_time, end_time_interval, use_example=False):
+
+def setup_network_data(
+    start, destination, start_time, end_time_interval, use_example=False
+):
     if not use_example:
         # get stop ids from names
         start = get_specific_station_identifier_from_name(stop_name=start)
@@ -23,13 +30,19 @@ def setup_network_data(start, destination, start_time, end_time_interval, use_ex
         start = int(start)
         destination = int(destination)
 
-
     # set end time artificially (only support up to 6 hours)
-    end_time = start_time + end_time_interval if end_time_interval else 120 # 2 hours
+    end_time = start_time + end_time_interval if end_time_interval else 120  # 2 hours
 
     run_time_start_generate_graph = time.time()
     # get data
-    graph = get_graph_data("2024-10-02", "../transport_data.db", start_time, end_time, start, use_example_data=use_example)
+    graph = get_graph_data(
+        "2024-10-02",
+        "../transport_data.db",
+        start_time,
+        end_time,
+        start,
+        use_example_data=use_example,
+    )
     logging.info("Graph data loaded")
 
     run_time_end_generate_graph = time.time()
@@ -37,6 +50,7 @@ def setup_network_data(start, destination, start_time, end_time_interval, use_ex
     logging.info(f"Runtime for generating graph: {runtime_generate_graph} seconds")
 
     return graph, start, destination, runtime_generate_graph
+
 
 def run_algorithms(graph, start, destination, start_time, time_budget_multiplier=1.5):
     # initialize graph G (with graph class)
@@ -56,15 +70,21 @@ def run_algorithms(graph, start, destination, start_time, time_budget_multiplier
     if len(shortest_path) == 0:
         return {}
 
-    time_budget_shortest_path = (shortest_time - start_time) * 1  # for the shortest path, we have 100% (and not more) of the time budget
-    shortest_path_reliability = compute_reliability(shortest_path, start_time, time_budget_shortest_path, transfer_time=5)
+    time_budget_shortest_path = (
+        shortest_time - start_time
+    ) * 1  # for the shortest path, we have 100% (and not more) of the time budget
+    shortest_path_reliability = compute_reliability(
+        shortest_path, start_time, time_budget_shortest_path, transfer_time=5
+    )
     logging.info("Found shortest path")
     print_path(shortest_path, start, start_time, convert_ids_to_names=True)
 
     # find most reliable path
     time_budget = time_budget_shortest_path * time_budget_multiplier
     run_time_start = time.time()
-    reliable_arrival_time, reliability, most_reliable_path = G.find_most_reliable_path(start, destination, start_time, int(time_budget))
+    reliable_arrival_time, reliability, most_reliable_path = G.find_most_reliable_path(
+        start, destination, start_time, int(time_budget)
+    )
     run_time_end = time.time()
     runtime = run_time_end - run_time_start
 
@@ -77,13 +97,20 @@ def run_algorithms(graph, start, destination, start_time, time_budget_multiplier
         "runtime_shortest_path": runtime_shortest_path,  # in seconds
         "arrival_time_most_reliable_path": reliable_arrival_time,
         "reliability": reliability,
-        "runtime": runtime, # in seconds
+        "runtime": runtime,  # in seconds
         "shortest_path": shortest_path,
         "most_reliable_path": most_reliable_path,
     }
 
 
-def find_shortest_and_most_reliable_path(start, destination, start_time, time_budget_multiplier=1.5, end_time_interval=120, use_example=False) -> dict:
+def find_shortest_and_most_reliable_path(
+    start,
+    destination,
+    start_time,
+    time_budget_multiplier=1.5,
+    end_time_interval=120,
+    use_example=False,
+) -> dict:
     """
     Find the shortest and most reliable path from start to destination
     :param start: start station
@@ -99,12 +126,17 @@ def find_shortest_and_most_reliable_path(start, destination, start_time, time_bu
     """
     logging.info(f"Loading graph data for {start} to {destination}")
 
-    graph, start, destination, run_time_generate_graph = setup_network_data(start, destination, start_time, end_time_interval, use_example)
+    graph, start, destination, run_time_generate_graph = setup_network_data(
+        start, destination, start_time, end_time_interval, use_example
+    )
 
-    result = run_algorithms(graph, start, destination, start_time, time_budget_multiplier)
+    result = run_algorithms(
+        graph, start, destination, start_time, time_budget_multiplier
+    )
     # add runtime for generating graph
     result["runtime_generate_graph"] = run_time_generate_graph
     return result
+
 
 def run_multiple_test_cases(test_cases):
     for case in test_cases:
@@ -113,15 +145,29 @@ def run_multiple_test_cases(test_cases):
         destination = case["destination"]
         start_time = case["start_time"]
         end_time_interval = case["end_time_interval"]
-        time_budget_multiplier = case["time_budget_multiplier"] if "time_budget_multiplier" in case else 1.5
-        result = find_shortest_and_most_reliable_path(start, destination, start_time, end_time_interval=end_time_interval, time_budget_multiplier=time_budget_multiplier, use_example=False)
+        time_budget_multiplier = (
+            case["time_budget_multiplier"] if "time_budget_multiplier" in case else 1.5
+        )
+        result = find_shortest_and_most_reliable_path(
+            start,
+            destination,
+            start_time,
+            end_time_interval=end_time_interval,
+            time_budget_multiplier=time_budget_multiplier,
+            use_example=False,
+        )
         logging.debug("** Result **")
         logging.debug("Earliest arrival time:", result["earliest_arrival_time"])
         logging.debug("Shortest path reliability:", result["shortest_path_reliability"])
         logging.debug("Most reliable path reliability:", result["reliability"])
         logging.debug("Runtime:", result["runtime"])
         logging.debug("Most reliable path route:")
-        print_path(result["most_reliable_path"], start_node=result["start_station"], start_time=start_time, convert_ids_to_names=True)
+        print_path(
+            result["most_reliable_path"],
+            start_node=result["start_station"],
+            start_time=start_time,
+            convert_ids_to_names=True,
+        )
 
         # save results
         solution_path = Path("./results")
@@ -130,7 +176,9 @@ def run_multiple_test_cases(test_cases):
         most_reliable_path = result["most_reliable_path"]
 
         # get time budget
-        time_budget = (result["earliest_arrival_time"] - start_time) * time_budget_multiplier
+        time_budget = (
+            result["earliest_arrival_time"] - start_time
+        ) * time_budget_multiplier
         # save the time budget in the result dictionary
         result["time_budget"] = round(time_budget)
 
@@ -138,30 +186,45 @@ def run_multiple_test_cases(test_cases):
         shortest_path_df = pd.DataFrame(shortest_path)
         path_df = pd.DataFrame(most_reliable_path)
         # go through both paths and add the station names
-        shortest_path_df["from_name"] = shortest_path_df["from"].apply(lambda x: get_specific_station_name_from_identifier(stop_id=x))
-        shortest_path_df["to_name"] = shortest_path_df["to"].apply(lambda x: get_specific_station_name_from_identifier(stop_id=x))
-        path_df["from_name"] = path_df["from"].apply(lambda x: get_specific_station_name_from_identifier(stop_id=x))
-        path_df["to_name"] = path_df["to"].apply(lambda x: get_specific_station_name_from_identifier(stop_id=x))
-        shortest_path_df.to_csv(solution_path / f"shortest_path_{start}_{destination}_{start_time}.csv")
-        path_df.to_csv(solution_path / f"most_reliable_path_{start}_{destination}_{start_time}.csv")
+        shortest_path_df["from_name"] = shortest_path_df["from"].apply(
+            lambda x: get_specific_station_name_from_identifier(stop_id=x)
+        )
+        shortest_path_df["to_name"] = shortest_path_df["to"].apply(
+            lambda x: get_specific_station_name_from_identifier(stop_id=x)
+        )
+        path_df["from_name"] = path_df["from"].apply(
+            lambda x: get_specific_station_name_from_identifier(stop_id=x)
+        )
+        path_df["to_name"] = path_df["to"].apply(
+            lambda x: get_specific_station_name_from_identifier(stop_id=x)
+        )
+        shortest_path_df.to_csv(
+            solution_path / f"shortest_path_{start}_{destination}_{start_time}.csv"
+        )
+        path_df.to_csv(
+            solution_path / f"most_reliable_path_{start}_{destination}_{start_time}.csv"
+        )
         # remove the paths from the result dictionary
         result.pop("shortest_path")
         result.pop("most_reliable_path")
         # also add the start and destination station names
-        result["start_name"] = get_specific_station_name_from_identifier(stop_id=result["start_station"])
-        result["destination_name"] = get_specific_station_name_from_identifier(stop_id=result["destination_station"])
+        result["start_name"] = get_specific_station_name_from_identifier(
+            stop_id=result["start_station"]
+        )
+        result["destination_name"] = get_specific_station_name_from_identifier(
+            stop_id=result["destination_station"]
+        )
         # now save results in a csv file
         # add an index to the result dictionary
         result = {k: [v] for k, v in result.items()}
         result_df = pd.DataFrame(result)
         result_df.to_csv(solution_path / f"{start}_{destination}_{start_time}.csv")
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     run_multiple = True
 
     if run_multiple:
-
         # prepare multiple test cases to run
         test_cases = [
             # {
@@ -175,7 +238,7 @@ if __name__ == "__main__":
                 "destination": "Zug",
                 "start_time": 600,
                 "end_time_interval": 80,
-                "time_budget_multiplier": 1.5
+                "time_budget_multiplier": 1.5,
             },
         ]
 
@@ -193,14 +256,16 @@ if __name__ == "__main__":
         start = "Luzern"  #
         destination = "Zug"  #
 
-        #desired_stop_id = 8507000
-        #desired_stop_name = "Bern"
+        # desired_stop_id = 8507000
+        # desired_stop_name = "Bern"
         # stop = get_specific_station_identifier_from_name(stop_name="Zürich HB")
         # print(stop)
         # stop_name = get_specific_station_name_from_identifier(stop_id="8501000")
         # print("stop_name", stop_name)
 
-        result = find_shortest_and_most_reliable_path(start, destination, start_time, end_time_interval=80, use_example=False)
+        result = find_shortest_and_most_reliable_path(
+            start, destination, start_time, end_time_interval=80, use_example=False
+        )
         if len(result.values()) == 0:
             logging.info("No solution could be found.")
             exit(0)
@@ -212,4 +277,9 @@ if __name__ == "__main__":
         print("Most reliable path reliability:", result["reliability"])
         print("Runtime:", result["runtime"])
         print("Most reliable path route:")
-        print_path(result["most_reliable_path"], start_node=result["start_station"], start_time=start_time, convert_ids_to_names=True)
+        print_path(
+            result["most_reliable_path"],
+            start_node=result["start_station"],
+            start_time=start_time,
+            convert_ids_to_names=True,
+        )
