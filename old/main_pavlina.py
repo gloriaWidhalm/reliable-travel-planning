@@ -1,8 +1,8 @@
 # This file contains code to run the simple Dijsktra pathfinder
 
 from algorithm.graph import Graph
-from retrieve_data.Network import get_data  # Import function to get data from database
-from retrieve_data.Network import (
+from old.Network import get_data  # Import function to get data from database
+from old.Network import (
     process_route_data,
 )  # Import function to generate graph dynamically
 from algorithm.reliability_v2 import compute_reliability

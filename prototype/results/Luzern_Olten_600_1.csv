@@ -1,0 +1,2 @@
+,start_time,start_station,destination_station,earliest_arrival_time,shortest_path_reliability,runtime_shortest_path,arrival_time_most_reliable_path,reliability,runtime,runtime_generate_graph,time_budget,start_name,destination_name
+0,600,8505000,8500218,688,0.7619047619047619,0.0001735687255859375,688,0.9523809523809523,569.8360686302185,51.47152805328369,132,Luzern,Olten

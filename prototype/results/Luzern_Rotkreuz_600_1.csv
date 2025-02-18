@@ -1,0 +1,2 @@
+,start_time,start_station,destination_station,earliest_arrival_time,shortest_path_reliability,runtime_shortest_path,arrival_time_most_reliable_path,reliability,runtime,runtime_generate_graph,time_budget,start_name,destination_name
+0,600,8505000,8502202,642,0.39999999999999997,0.0,642,1.0,5.512791395187378,43.74976921081543,63,Luzern,Rotkreuz

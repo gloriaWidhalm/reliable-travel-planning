@@ -1,0 +1,2 @@
+,start_time,start_station,destination_station,earliest_arrival_time,shortest_path_reliability,runtime_shortest_path,arrival_time_most_reliable_path,reliability,runtime,runtime_generate_graph,time_budget,start_name,destination_name
+0,600,8505000,8503209,698,0.3989333333333333,0.0,714,1.0,561.072934627533,63.874062299728394,147,Luzern,Pfäffikon SZ

@@ -1,6 +1,6 @@
 # This file contains code to run the simple Dijsktra pathfinder
 from algorithm.helper import get_graph_data
-from algorithm.main import print_path
+from old.main import print_path
 from constants import LOG_LEVEL
 from algorithm.graph import Graph
 from algorithm.reliability_v2 import compute_reliability
@@ -28,7 +28,7 @@ if __name__ == "__main__":
     # get data
     graph = get_graph_data(
         "2024-10-02",
-        "../../transport_data.db",
+        "../transport_data.db",
         start_time,
         end_time,
         start,

@@ -228,6 +228,9 @@ class Graph:
         start_time: int,
         time_budget: int,
         transfer_time=TRANSFER_TIME_DEFAULT,
+        lower_bound_reliability=0.0,
+        initial_most_reliable_path=None,
+        enable_efficiency_improvements=True
     ) -> tuple[int, float, list[dict]]:
         """
         Find the most reliable "itinerary" / path using a network search algorithm, based on the reference paper "The most reliable flight itinerary problem" (Redmond et al., 2019)
@@ -240,16 +243,28 @@ class Graph:
             f"Find most reliable path from {source} to {target} starting at {start_time} with a time budget of {time_budget} minutes"
         )
         # Initialize most reliable path
-        most_reliable_path = None
+        if enable_efficiency_improvements:
+            # 1. (B1 - shortest path lower bound) efficiency improvement: use the shortest path as initial incumbent most reliable path
+            most_reliable_path = initial_most_reliable_path
+        else:
+            most_reliable_path = None
         # Initialize k (used as additional "tiebreaker" for the comparison of the heap queue)
-        k = 1
+        k = 2
         # Initialize list with partial paths/itineraries (reliability, label k (as additional identifier of the partial path, time between start time and the scheduled arrival
         # of the current tail trip in the itinerary/path, probability of last/tail trip arriving at time t dependent on making the connections, and list of nodes part of the
         # path (node with actual time information))
-        priority_queue = [
-            (0, k, 0, None, [{"from": source, "to": source, "actual_times": []}])
-        ]
+        if enable_efficiency_improvements:
+            # lower bound reliability is either 0 or the reliability of the shortest path
+            priority_queue = [
+                # regarding using the shortest path as initial incumbent most reliable path, we use the reliability of the shortest path as lower bound
+                (lower_bound_reliability, k, 0, None, [{"from": source, "to": source, "actual_times": []}])
+            ]
+        else:
+            priority_queue = [
+                (0, k, 0, None, [{"from": source, "to": source, "actual_times": []}])
+            ]
         position_of_trips = 4  # position of the trips in the tuple
+        position_of_reliability = 0  # position of the reliability in the tuple
 
         # heapify the priority queue to maintain the heap property (from the initial list)
         heapify(priority_queue)
@@ -299,6 +314,7 @@ class Graph:
                 transfer_needed = is_transfer_needed(
                     train_identifier_last_trip, train_identifier_current_connection
                 )
+                # consolidate the path if no transfer is needed (= same train)
                 if not transfer_needed:
                     actual_times = merge_actual_times(
                         last_trip["actual_times"], connection["actual_times"]
@@ -344,8 +360,9 @@ class Graph:
                     # if no actual times are available, we just add the connection to the extended path
                     extended_trips.append(connection)
 
-                # simplification: if the number of trips is more than 4, we skip all possible connections from here (we have already reached the maximum number of trips)
+                # simplification/efficiency improvement: if the number of trips is more than 4, we skip all possible connections from here (we have already reached the maximum number of trips)
                 # This is a simplification to speed up the process, we assume that no one would transfer more than 3 times
+                # This is a bit different from in the paper - flight networks don't have the same structure as train networks, fewer nodes
                 if len(extended_trips) > 4:
                     logging.debug(
                         "More than 4 trips, skipping all possible connections from here"
@@ -396,19 +413,33 @@ class Graph:
                     # check if the new path is more reliable than the current most reliable path
                     if (
                         most_reliable_path is None
-                        or reliability_path > most_reliable_path[0]
+                        or reliability_path > most_reliable_path[position_of_reliability]
                     ):
                         logging.debug(
                             f"New most reliable path: {new_most_reliable_path}"
                         )
                         most_reliable_path = new_most_reliable_path
+
+                        if enable_efficiency_improvements:
+                            # 2a. (R6 in paper) efficiency improvement: after adding the most reliable path, we can prune all other paths/itineraries that are less reliable
+                            # prune priority queue
+                            priority_queue = [
+                                path
+                                for path in priority_queue
+                                if path[position_of_reliability] > most_reliable_path[position_of_reliability]
+                            ]
                 else:
-                    # add the extended path to the priority queue
-                    heappush(priority_queue, extended_path)
-                    logging.debug(
-                        f"Add path to queue: {get_specific_station_name_from_identifier(stop_id=extended_path[position_of_trips][-1]['to'])}"
-                    )
-        reliability = most_reliable_path[0] if most_reliable_path is not None else 0
+                    # only add the extended path to the priority queue if the reliability of the partial itinerary is greater than the most reliable path found so far
+                    if enable_efficiency_improvements:
+                        # 2b. (R6 in paper) efficiency improvement: only add the extended path to the priority queue if the reliability of the partial itinerary is
+                        # greater than the most reliable path found so far
+                        # the reliability of the partial path is the product of all probabilities of connections made
+                        if most_reliable_path is not None and probability_connection_made > most_reliable_path[position_of_reliability]:
+                            # add the extended path to the priority queue
+                            heappush(priority_queue, extended_path)
+                    else:
+                        heappush(priority_queue, extended_path)
+        reliability = most_reliable_path[position_of_reliability] if most_reliable_path is not None else 0
         # check if the reliability is 0 (no reliable path found)
         if reliability == 0:
             logging.info("No reliable path found")

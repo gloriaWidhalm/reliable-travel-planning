@@ -1,5 +1,5 @@
 # This file contains code to run the simple Dijsktra pathfinder
-from algorithm.main import print_path
+from old.main import print_path
 from constants import LOG_LEVEL
 from algorithm.graph import Graph
 from algorithm.reliability_v2 import compute_reliability
