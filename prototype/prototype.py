@@ -8,12 +8,12 @@ from constants import LOG_LEVEL
 
 logging.basicConfig(level=LOG_LEVEL)
 
-from old.evaluate_shortest_paths import get_graph_data
+
 from algorithm.graph import Graph
 from algorithm.helper import (
     print_path,
     get_specific_station_identifier_from_name,
-    get_specific_station_name_from_identifier,
+    get_specific_station_name_from_identifier, get_graph_data,
 )
 from algorithm.reliability_v2 import compute_reliability
 
@@ -202,9 +202,15 @@ def run_multiple_test_cases(test_cases, enable_efficiency_improvements=True, cre
             # running the test case 2 times to get an average run time
             for i in range(2):
                 result = run_single_case(start, destination, start_time, end_time_interval, time_budget_multiplier, enable_efficiency_improvements=enable_efficiency_improvements)
+                # if result is empty, continue with the next test case
+                if len(result.values()) == 0:
+                    continue
                 run_times.append(result["runtime"])
                 run_times_graph_generation.append(result["runtime_generate_graph"])
                 run_times_shortest_path.append(result["runtime_shortest_path"])
+            if len(run_times) == 0:
+                logging.debug(f"No solution could be found for test case {start} to {destination} at {start_time} with time interval {end_time_interval} and time budget multiplier {time_budget_multiplier}")
+                continue
             average_runtime = sum(run_times) / len(run_times)
             average_runtime_generate_graph = sum(run_times_graph_generation) / len(run_times_graph_generation)
             average_runtime_shortest_path = sum(run_times_shortest_path) / len(run_times_shortest_path)
@@ -280,7 +286,7 @@ def run_multiple_test_cases(test_cases, enable_efficiency_improvements=True, cre
 
 
 if __name__ == "__main__":
-    create_average_run_time = True
+    create_average_run_time = False
     enable_efficiency_improvements = True
 
     # prepare multiple test cases to run

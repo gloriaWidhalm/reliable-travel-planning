@@ -1,5 +1,6 @@
 # Reliable Travel Planning Prototype
-
+---
+The used Python version is 3.11.
 This is a brief description of how to set up and use the project code, the folder structure and what to expect in each folder / file.
 Note: GTFS data is only used for visualization. The delay data contains all necessary information for finding the paths.
 ---
@@ -19,6 +20,7 @@ Note: GTFS data is only used for visualization. The delay data contains all nece
 ### Note
 There is a reference to a data folder with the GTFS and delay data (and also a database 'transport.db' in the root folder) - because of the size of these files, they are not included in git. They need to be created separately.
 Also, some databases created for querying data live in the data folder.
+PyCharm is used as the IDE for this project.
 ### Packages
 We currently use duck db as database for querying the data (GTFS and actual (delay) data). We use networkx for visualizing the graphs (could have used it for finding the shortest path as well, but we decided to code that ourselves (for understanding and better ability to customize the code). For some data manipulations we use pandas and numpy.
 Also, we use 'logging' for testing, debugging and progress updates.
