@@ -15,7 +15,7 @@ from algorithm.helper import (
     merge_actual_times,
     get_specific_station_name_from_identifier,
 )
-from algorithm.reliability_v2 import compute_reliability, TRANSFER_TIME_DEFAULT
+from algorithm.reliability import compute_reliability, TRANSFER_TIME_DEFAULT
 from constants import LOG_LEVEL
 
 # set log level

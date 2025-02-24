@@ -2,7 +2,7 @@
 from old.main import print_path
 from constants import LOG_LEVEL
 from algorithm.graph import Graph
-from algorithm.reliability_v2 import compute_reliability
+from algorithm.reliability import compute_reliability
 
 import logging
 

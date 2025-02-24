@@ -15,7 +15,7 @@ from algorithm.helper import (
     get_specific_station_identifier_from_name,
     get_specific_station_name_from_identifier, get_graph_data,
 )
-from algorithm.reliability_v2 import compute_reliability
+from algorithm.reliability import compute_reliability
 
 
 def setup_network_data(

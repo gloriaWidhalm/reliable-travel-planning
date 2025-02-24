@@ -5,7 +5,7 @@ from old.Network import get_data  # Import function to get data from database
 from old.Network import (
     process_route_data,
 )  # Import function to generate graph dynamically
-from algorithm.reliability_v2 import compute_reliability
+from algorithm.reliability import compute_reliability
 
 
 def print_path(path, start_node, start_time=0):

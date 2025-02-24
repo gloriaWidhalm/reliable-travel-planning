@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request
 from algorithm.graph import Graph
-from algorithm.reliability_v2 import compute_reliability
+from algorithm.reliability import compute_reliability
 
 
 app = Flask(__name__)
