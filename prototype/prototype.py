@@ -73,9 +73,10 @@ def run_algorithms(graph, start, destination, start_time, time_budget_multiplier
     if len(shortest_path) == 0:
         return {}
 
+    # for the shortest path, we have 100% (and not more) of the time budget
     time_budget_shortest_path = (
         shortest_time - start_time
-    ) * 1  # for the shortest path, we have 100% (and not more) of the time budget
+    ) * 1 # + 5 # add 5 minutes for reliability assessment, assuming 5 minutes later is still acceptable
     shortest_path_reliability = compute_reliability(
         shortest_path, start_time, time_budget_shortest_path, transfer_time=5
     )
@@ -305,13 +306,13 @@ if __name__ == "__main__":
         #     "end_time_interval": 60,
         #     "time_budget_multiplier": 1.5,
         # },
-        {
-            "start": "Luzern",
-            "destination": "Zug",
-            "start_time": 600,
-            "end_time_interval": 80,
-            "time_budget_multiplier": 1.5,
-        },
+        # {
+        #     "start": "Luzern",
+        #     "destination": "Zug",
+        #     "start_time": 600,
+        #     "end_time_interval": 80,
+        #     "time_budget_multiplier": 1.5,
+        # },
         # {
         #     "start": "Luzern",
         #     "destination": "Olten",
@@ -326,13 +327,13 @@ if __name__ == "__main__":
         #     "end_time_interval": 120,
         #     "time_budget_multiplier": 1.5,
         # },
-        # {
-        #     "start": "Brig",
-        #     "destination": "Freiburg",
-        #     "start_time": 600,
-        #     "end_time_interval": 120,
-        #     "time_budget_multiplier": 1.5,
-        # },
+        {
+            "start": "Brig",
+            "destination": "Freiburg",
+            "start_time": 600,
+            "end_time_interval": 240,
+            "time_budget_multiplier": 1.5,
+        },
     ]
 
     run_multiple_test_cases(test_cases, enable_efficiency_improvements=enable_efficiency_improvements, create_average_run_time=create_average_run_time)
