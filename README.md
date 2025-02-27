@@ -6,14 +6,14 @@ Note: GTFS data is only used for visualization. The delay data contains all nece
 ---
 
 ## Setup / Running the prototype
-1. Setup necessary data (if not already prepared)
+1. Setup necessary data (if not already prepared, for running the prototype transport_data.db and gtfs_train.db are already prepared in this repository, for a different dataset (time period) the data needs to be downloaded and the database needs to be set up/new data imported):
     - Download the delay (and optionally GTFS) data (actual (delay) data for the desired time period: https://data.opentransportdata.swiss/en/dataset/istdaten, GTFS: https://data.opentransportdata.swiss/en/?groups=timetables-gtfs)
     - Set up the delay database (and optionally GTFS database) with the data (see the setup delay data folder and setup GTFS data optional folder)
-2. Choose desired start and destination station as well as the start time and run the prototype.py file (in the prototype folder) to generate the results - the results are stored in the results folder.
+2. Choose desired start and destination station as well as the start time and run the prototype.py file (in the prototype folder) to generate the results - the results are stored in the "results" folder.
     - It is also possible to run multiple scenarios at once (by providing a list of start and destination stations and start times).
     - Additional parameters are the end time interval and the time budget multiplier.
 3. Visualizing the results (optional)
-    - Run the create_graph_visual_from_results.py file in the visualization folder to visualize the results (the paths and reliability information).
+    - Run the "create_graph_visual_from_results.py file" in the visualization folder to visualize the results (the paths and reliability information).
     - The visualization is based on the results in the prototype/results folder.
 ---
 
@@ -57,7 +57,7 @@ The GTFS data contains more information about stops and routes, etc. (such as th
 ## setup GTFS data optional folder
 This folder contains functions for setting up the GTFS database (which is optional, since the delay data contains all necessary information for finding the paths).
 Necessary for visualization purposes (lat/lon coordinates of the stops).
-The create_gtfs_db_full and create_script_gtfs_tables_db files contain database statements for importing the GTFS data into duck db (which is quite comfortable for querying the GTFS data, the structure is the same as in the files - with a separate table for routes, trips, stops, etc.).
+The "create_gtfs_db_full" and "create_script_gtfs_tables_db" files contain database statements for importing the GTFS data into duck db (which is quite comfortable for querying the GTFS data, the structure is the same as in the files - with a separate table for routes, trips, stops, etc.).
 
 ## visualization folder
 This folder contains the implementation for visualizing the network graph based on the results in the prototype/results folder.

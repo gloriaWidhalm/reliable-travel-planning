@@ -1,2 +1,0 @@
-,start_time,start_station,destination_station,earliest_arrival_time,shortest_path_reliability,runtime_shortest_path,arrival_time_most_reliable_path,reliability,runtime,runtime_generate_graph,time_budget,start_name,destination_name
-0,600,8501609,8504100,783,1.0,0.009547710418701172,783,1.0,0.004616260528564453,113.74709057807922,274,Brig,Fribourg/Freiburg

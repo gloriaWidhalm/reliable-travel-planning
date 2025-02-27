@@ -53,11 +53,12 @@ if __name__ == "__main__":
     gtfs_path = "../data/gtfs/gtfs_train.zip"
 
     file_name_suffix = gtfs_path.split("/")[-1].split(".")[0]
-    # Connect to the database
-    connection = duckdb.connect(f"./data/{file_name_suffix}.db", read_only=False)
 
     # Unzip the GTFS file
     unzip_gtfs(gtfs_path)
+
+    # Connect to the database
+    connection = duckdb.connect(f"../data/{file_name_suffix}.db", read_only=False)
 
     # Create the schema
     create_schema(connection)

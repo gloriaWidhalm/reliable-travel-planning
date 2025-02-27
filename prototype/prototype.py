@@ -306,13 +306,13 @@ if __name__ == "__main__":
         #     "end_time_interval": 60,
         #     "time_budget_multiplier": 1.5,
         # },
-        # {
-        #     "start": "Luzern",
-        #     "destination": "Zug",
-        #     "start_time": 600,
-        #     "end_time_interval": 80,
-        #     "time_budget_multiplier": 1.5,
-        # },
+        {
+            "start": "Luzern",
+            "destination": "Zug",
+            "start_time": 600,
+            "end_time_interval": 80,
+            "time_budget_multiplier": 1.5,
+        },
         # {
         #     "start": "Luzern",
         #     "destination": "Olten",
@@ -327,13 +327,13 @@ if __name__ == "__main__":
         #     "end_time_interval": 120,
         #     "time_budget_multiplier": 1.5,
         # },
-        {
-            "start": "Brig",
-            "destination": "Freiburg",
-            "start_time": 600,
-            "end_time_interval": 240,
-            "time_budget_multiplier": 1.5,
-        },
+        # {
+        #     "start": "Brig",
+        #     "destination": "Freiburg",
+        #     "start_time": 600,
+        #     "end_time_interval": 240,
+        #     "time_budget_multiplier": 1.5,
+        # },
     ]
 
     run_multiple_test_cases(test_cases, enable_efficiency_improvements=enable_efficiency_improvements, create_average_run_time=create_average_run_time)

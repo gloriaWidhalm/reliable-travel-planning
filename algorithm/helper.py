@@ -336,7 +336,7 @@ def get_coordinates_from_station_list(
     db_connection=None, station_list=None, use_stop_name=True
 ):
     if not db_connection:
-        connection = duckdb.connect("../data/gtfs_train.db", read_only=True)
+        connection = duckdb.connect("../gtfs_train.db", read_only=True)
     else:
         connection = db_connection
     if station_list:

@@ -46,7 +46,7 @@ def get_station_map_from_station_coordinates(stations: pd.DataFrame):
 
 if __name__ == "__main__":
     # read in the results (shortest path and most reliable path)
-    results_file = "Luzern_Pfäffikon_600"
+    results_file = "Luzern_Olten_600"
     with_eff_impr = False
     file_number = '_1'
     file_name_prefix = f"{results_file}{'_with_eff_impr' if with_eff_impr else ''}{file_number}"
