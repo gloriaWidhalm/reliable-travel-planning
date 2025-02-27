@@ -6,7 +6,7 @@ Note: GTFS data is only used for visualization. The delay data contains all nece
 ---
 
 ## Setup / Running the prototype
-1. Setup necessary data (if not already prepared, for running the prototype transport_data.db and gtfs_train.db are already prepared in this repository, for a different dataset (time period) the data needs to be downloaded and the database needs to be set up/new data imported):
+1. Setup necessary data
     - Download the delay (and optionally GTFS) data (actual (delay) data for the desired time period: https://data.opentransportdata.swiss/en/dataset/istdaten, GTFS: https://data.opentransportdata.swiss/en/?groups=timetables-gtfs)
     - Set up the delay database (and optionally GTFS database) with the data (see the setup delay data folder and setup GTFS data optional folder)
 2. Choose desired start and destination station as well as the start time and run the prototype.py file (in the prototype folder) to generate the results - the results are stored in the "results" folder.
